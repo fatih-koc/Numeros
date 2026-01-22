@@ -9,7 +9,6 @@ import {
   BlurMask,
   RadialGradient,
   vec,
-  Paint,
 } from '@shopify/react-native-skia'
 import Animated, {
   useSharedValue,
@@ -20,7 +19,6 @@ import Animated, {
   Easing,
   cancelAnimation,
   useDerivedValue,
-  interpolate,
 } from 'react-native-reanimated'
 import {ShaderCanvas} from './ShaderCanvas'
 import {colors, sigilColors} from '../lib/colors'
@@ -34,10 +32,10 @@ interface LoveEngineProps {
   activeNumber: number | null
   currentPhase: number | null
   showSigils: {
-    core: boolean
-    desire: boolean
-    bond: boolean
-    friction: boolean
+    life_path: boolean
+    soul_urge: boolean
+    expression: boolean
+    personality: boolean
   }
 }
 
@@ -49,7 +47,7 @@ const ENGINE_SIZE = 320
 const TRACK_SIZE = ENGINE_SIZE * 0.9 // 90% of container like prototype
 const NUMBER_RADIUS_PERCENT = 45 // percentage of track container
 
-// Create triangle path for desire sigil
+// Create triangle path for soul_urge sigil
 const createTrianglePath = (size: number) => {
   const path = Skia.Path.Make()
   const height = size
@@ -96,10 +94,10 @@ export function LoveEngine({
   const resultOpacity = useSharedValue(0)
 
   // Sigil animation values
-  const sigilCoreOpacity = useSharedValue(0)
-  const sigilDesireOpacity = useSharedValue(0)
-  const sigilBondOpacity = useSharedValue(0)
-  const sigilFrictionOpacity = useSharedValue(0)
+  const sigilLifePathOpacity = useSharedValue(0)
+  const sigilSoulUrgeOpacity = useSharedValue(0)
+  const sigilExpressionOpacity = useSharedValue(0)
+  const sigilPersonalityOpacity = useSharedValue(0)
 
   // Map phase to shader ID
   const getShaderForPhase = (): number => {
@@ -162,32 +160,32 @@ export function LoveEngine({
 
   // Sigil animations
   useEffect(() => {
-    sigilCoreOpacity.value = withTiming(showSigils.core ? 1 : 0, {
+    sigilLifePathOpacity.value = withTiming(showSigils.life_path ? 1 : 0, {
       duration: 800,
       easing: Easing.inOut(Easing.cubic),
     })
-  }, [showSigils.core, sigilCoreOpacity])
+  }, [showSigils.life_path, sigilLifePathOpacity])
 
   useEffect(() => {
-    sigilDesireOpacity.value = withTiming(showSigils.desire ? 1 : 0, {
+    sigilSoulUrgeOpacity.value = withTiming(showSigils.soul_urge ? 1 : 0, {
       duration: 800,
       easing: Easing.inOut(Easing.cubic),
     })
-  }, [showSigils.desire, sigilDesireOpacity])
+  }, [showSigils.soul_urge, sigilSoulUrgeOpacity])
 
   useEffect(() => {
-    sigilBondOpacity.value = withTiming(showSigils.bond ? 1 : 0, {
+    sigilExpressionOpacity.value = withTiming(showSigils.expression ? 1 : 0, {
       duration: 800,
       easing: Easing.inOut(Easing.cubic),
     })
-  }, [showSigils.bond, sigilBondOpacity])
+  }, [showSigils.expression, sigilExpressionOpacity])
 
   useEffect(() => {
-    sigilFrictionOpacity.value = withTiming(showSigils.friction ? 1 : 0, {
+    sigilPersonalityOpacity.value = withTiming(showSigils.personality ? 1 : 0, {
       duration: 800,
       easing: Easing.inOut(Easing.cubic),
     })
-  }, [showSigils.friction, sigilFrictionOpacity])
+  }, [showSigils.personality, sigilPersonalityOpacity])
 
   // Result number animation
   useEffect(() => {
@@ -258,15 +256,15 @@ export function LoveEngine({
   }
 
   // Skia sigil opacity values
-  const coreOp = useDerivedValue(() => sigilCoreOpacity.value)
-  const desireOp = useDerivedValue(() => sigilDesireOpacity.value)
-  const bondOp = useDerivedValue(() => sigilBondOpacity.value)
-  const frictionOp = useDerivedValue(() => sigilFrictionOpacity.value)
+  const lifePathOp = useDerivedValue(() => sigilLifePathOpacity.value)
+  const soulUrgeOp = useDerivedValue(() => sigilSoulUrgeOpacity.value)
+  const expressionOp = useDerivedValue(() => sigilExpressionOpacity.value)
+  const personalityOp = useDerivedValue(() => sigilPersonalityOpacity.value)
 
   // Skia paths
   const trianglePath = createTrianglePath(60)
-  const bondDiamondPath = createDiamondPath(55, 0.8) // scale-80 like prototype
-  const frictionDiamondPath = createDiamondPath(45)
+  const expressionDiamondPath = createDiamondPath(55, 0.8) // scale-80 like prototype
+  const personalityDiamondPath = createDiamondPath(45)
 
   return (
     <View style={styles.container}>
@@ -303,14 +301,14 @@ export function LoveEngine({
           />
         </Circle>
 
-        {/* Core Sigil - Circle with glow */}
-        <Group opacity={coreOp}>
+        {/* Life Path Sigil - Circle with glow */}
+        <Group opacity={lifePathOp}>
           {/* Outer glow */}
           <Circle
             cx={ENGINE_SIZE / 2}
             cy={ENGINE_SIZE / 2}
             r={42}
-            color={sigilColors.core}
+            color={sigilColors.life_path}
             style="stroke"
             strokeWidth={3}>
             <BlurMask blur={20} style="solid" />
@@ -320,18 +318,18 @@ export function LoveEngine({
             cx={ENGINE_SIZE / 2}
             cy={ENGINE_SIZE / 2}
             r={40}
-            color={sigilColors.core}
+            color={sigilColors.life_path}
             style="stroke"
             strokeWidth={2}
           />
         </Group>
 
-        {/* Desire Sigil - Triangle with glow */}
-        <Group opacity={desireOp}>
+        {/* Soul Urge Sigil - Triangle with glow */}
+        <Group opacity={soulUrgeOp}>
           {/* Outer glow */}
           <Path
             path={trianglePath}
-            color={sigilColors.desire}
+            color={sigilColors.soul_urge}
             style="stroke"
             strokeWidth={3}>
             <BlurMask blur={15} style="solid" />
@@ -339,45 +337,45 @@ export function LoveEngine({
           {/* Main triangle */}
           <Path
             path={trianglePath}
-            color={sigilColors.desire}
+            color={sigilColors.soul_urge}
             style="stroke"
             strokeWidth={2}
           />
         </Group>
 
-        {/* Bond Sigil - Diamond with glow */}
-        <Group opacity={bondOp}>
+        {/* Expression Sigil - Diamond with glow */}
+        <Group opacity={expressionOp}>
           {/* Outer glow */}
           <Path
-            path={bondDiamondPath}
-            color={sigilColors.bond}
+            path={expressionDiamondPath}
+            color={sigilColors.expression}
             style="stroke"
             strokeWidth={3}>
             <BlurMask blur={20} style="solid" />
           </Path>
           {/* Main diamond */}
           <Path
-            path={bondDiamondPath}
-            color={sigilColors.bond}
+            path={expressionDiamondPath}
+            color={sigilColors.expression}
             style="stroke"
             strokeWidth={2}
           />
         </Group>
 
-        {/* Friction Sigil - Smaller Diamond with glow */}
-        <Group opacity={frictionOp}>
+        {/* Personality Sigil - Smaller Diamond with glow */}
+        <Group opacity={personalityOp}>
           {/* Outer glow */}
           <Path
-            path={frictionDiamondPath}
-            color={sigilColors.friction}
+            path={personalityDiamondPath}
+            color={sigilColors.personality}
             style="stroke"
             strokeWidth={3}>
             <BlurMask blur={20} style="solid" />
           </Path>
           {/* Main diamond */}
           <Path
-            path={frictionDiamondPath}
-            color={sigilColors.friction}
+            path={personalityDiamondPath}
+            color={sigilColors.personality}
             style="stroke"
             strokeWidth={2}
           />

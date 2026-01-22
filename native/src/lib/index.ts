@@ -1,2 +1,6 @@
 export * from './colors'
 export * from './numerology'
+export * from './scanOutput'
+export * from './generateScan'
+export * from './cities'
+export * from './planetMeanings'

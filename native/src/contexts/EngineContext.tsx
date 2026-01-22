@@ -1,5 +1,6 @@
 import React, {createContext, useContext, useState, useCallback, useRef, ReactNode} from 'react'
-import {calculateNumerology} from '../lib/numerology'
+import {generateScan} from '../lib/generateScan'
+import type {UserInput} from '../lib/scanOutput'
 import {useNumerology} from './NumerologyContext'
 
 export interface EngineState {
@@ -10,24 +11,19 @@ export interface EngineState {
   activeNumber: number | null
   currentPhase: number | null
   showSigils: {
-    core: boolean
-    desire: boolean
-    bond: boolean
-    friction: boolean
+    life_path: boolean
+    soul_urge: boolean
+    expression: boolean
+    personality: boolean
   }
-}
-
-interface ExtractionParams {
-  name: string
-  dob: string
 }
 
 interface EngineContextValue {
   engineState: EngineState
   statusText: string
   subStatus: string
-  extractionParams: ExtractionParams | null
-  setExtractionParams: (params: ExtractionParams | null) => void
+  extractionParams: UserInput | null
+  setExtractionParams: (params: UserInput | null) => void
   startExtraction: (onComplete: () => void) => void
   resetEngine: () => void
 }
@@ -40,10 +36,10 @@ const initialEngineState: EngineState = {
   activeNumber: null,
   currentPhase: null,
   showSigils: {
-    core: false,
-    desire: false,
-    bond: false,
-    friction: false,
+    life_path: false,
+    soul_urge: false,
+    expression: false,
+    personality: false,
   },
 }
 
@@ -59,8 +55,8 @@ export function EngineProvider({children}: EngineProviderProps) {
   const [engineState, setEngineState] = useState<EngineState>(initialEngineState)
   const [statusText, setStatusText] = useState('numEros is idle')
   const [subStatus, setSubStatus] = useState('Your love field is unaligned')
-  const [extractionParams, setExtractionParams] = useState<ExtractionParams | null>(null)
-  const {setNumerologyData} = useNumerology()
+  const [extractionParams, setExtractionParams] = useState<UserInput | null>(null)
+  const {setScanOutput} = useNumerology()
   const isRunningRef = useRef(false)
 
   const startExtraction = useCallback(
@@ -68,20 +64,18 @@ export function EngineProvider({children}: EngineProviderProps) {
       if (!extractionParams || isRunningRef.current) return
       isRunningRef.current = true
 
-      const {name, dob} = extractionParams
-
       const phases = [
-        {text: 'Extracting Life Path...', duration: 2000, sigil: null},
-        {text: 'Decoding Desire...', duration: 2000, sigil: 'desire' as const},
-        {text: 'Mapping Bond Pattern...', duration: 2000, sigil: 'bond' as const},
-        {text: 'Calculating Friction...', duration: 2000, sigil: 'friction' as const},
-        {text: 'Assembling Love Blueprint...', duration: 2000, sigil: 'core' as const},
+        {text: 'Extracting Life Path...', duration: 2000, sigil: 'life_path' as const},
+        {text: 'Decoding Soul Urge...', duration: 2000, sigil: 'soul_urge' as const},
+        {text: 'Mapping Expression...', duration: 2000, sigil: 'expression' as const},
+        {text: 'Calculating Personality...', duration: 2000, sigil: 'personality' as const},
+        {text: 'Assembling Love Blueprint...', duration: 2000, sigil: null},
       ]
 
       setEngineState(prev => ({
         ...prev,
         isCalculating: true,
-        showSigils: {core: false, desire: false, bond: false, friction: false},
+        showSigils: {life_path: false, soul_urge: false, expression: false, personality: false},
       }))
       setSubStatus('Reading your signature')
 
@@ -89,17 +83,19 @@ export function EngineProvider({children}: EngineProviderProps) {
         const phase = phases[i]
         setStatusText(phase.text)
 
-        if (phase.sigil) {
-          setEngineState(prev => ({
-            ...prev,
-            showSigils: {
-              ...prev.showSigils,
-              [phase.sigil!]: true,
-            },
-          }))
-        }
+        // Reset all sigils, then show only the current one
+        setEngineState(prev => ({
+          ...prev,
+          showSigils: {
+            life_path: phase.sigil === 'life_path',
+            soul_urge: phase.sigil === 'soul_urge',
+            expression: phase.sigil === 'expression',
+            personality: phase.sigil === 'personality',
+          },
+          activeNumber: i,
+          currentPhase: i,
+        }))
 
-        setEngineState(prev => ({...prev, activeNumber: i, currentPhase: i}))
         await sleep(phase.duration)
       }
 
@@ -107,14 +103,14 @@ export function EngineProvider({children}: EngineProviderProps) {
       setEngineState(prev => ({...prev, isIntense: true}))
       await sleep(1500)
 
-      // Calculate results
-      const data = calculateNumerology(name, dob)
-      setNumerologyData(data)
+      // Generate unified scan output
+      const scan = generateScan(extractionParams)
+      setScanOutput(scan)
 
       // Show result number briefly
       setEngineState(prev => ({
         ...prev,
-        resultNumber: data.core,
+        resultNumber: scan.numerology.life_path,
         showResult: true,
       }))
       await sleep(1500)
@@ -128,7 +124,7 @@ export function EngineProvider({children}: EngineProviderProps) {
 
       onComplete()
     },
-    [extractionParams, setNumerologyData],
+    [extractionParams, setScanOutput],
   )
 
   const resetEngine = useCallback(() => {

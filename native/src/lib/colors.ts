@@ -52,8 +52,8 @@ export const energyColors: Record<number, string> = {
 
 // Sigil colors mapping
 export const sigilColors = {
-  core: colors.energy7, // Indigo
-  desire: colors.energy3, // Orange
-  bond: colors.energy4, // Green
-  friction: colors.energy2, // Pink
+  life_path: colors.energy7, // Indigo - Circle sigil
+  soul_urge: colors.energy3, // Orange - Triangle sigil
+  expression: colors.energy4, // Green - Square sigil
+  personality: colors.energy2, // Pink - Diamond sigil
 }

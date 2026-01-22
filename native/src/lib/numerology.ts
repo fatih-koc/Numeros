@@ -7,7 +7,7 @@ const LETTER_VALUES: Record<string, number> = {
 const VOWELS = ['a', 'e', 'i', 'o', 'u']
 
 const NUMBER_MEANINGS = {
-  core: {
+  life_path: {
     1: 'The Independent Leader',
     2: 'The Sensitive Mediator',
     3: 'The Creative Expresser',
@@ -21,7 +21,7 @@ const NUMBER_MEANINGS = {
     22: 'The Master Builder',
     33: 'The Master Teacher',
   } as Record<number, string>,
-  desire: {
+  soul_urge: {
     1: 'You crave independence and recognition',
     2: 'You crave harmony and partnership',
     3: 'You crave self-expression and joy',
@@ -32,7 +32,7 @@ const NUMBER_MEANINGS = {
     8: 'You crave power and abundance',
     9: 'You crave service and completion',
   } as Record<number, string>,
-  bond: {
+  expression: {
     1: 'You attach through admiration',
     2: 'You attach through emotional safety',
     3: 'You attach through fun and creativity',
@@ -43,17 +43,16 @@ const NUMBER_MEANINGS = {
     8: 'You attach through shared ambition',
     9: 'You attach through spiritual depth',
   } as Record<number, string>,
-  friction: {
-    0: 'Imbalance breaks you',
-    1: 'Ego clashes break you',
-    2: 'Emotional neglect breaks you',
-    3: 'Criticism breaks you',
-    4: 'Chaos breaks you',
-    5: 'Restriction breaks you',
-    6: 'Betrayal breaks you',
-    7: 'Superficiality breaks you',
-    8: 'Powerlessness breaks you',
-    9: 'Meaninglessness breaks you',
+  personality: {
+    1: 'Others see you as a leader',
+    2: 'Others see you as diplomatic',
+    3: 'Others see you as creative',
+    4: 'Others see you as reliable',
+    5: 'Others see you as dynamic',
+    6: 'Others see you as nurturing',
+    7: 'Others see you as mysterious',
+    8: 'Others see you as powerful',
+    9: 'Others see you as compassionate',
   } as Record<number, string>,
 }
 
@@ -94,45 +93,75 @@ export function calculateExpression(name: string): number {
   return reduceToSingle(sum)
 }
 
-export function calculateChallenge(dateStr: string): number {
-  const [, month, day] = dateStr.split('-').map(Number)
-  const monthNum = reduceToSingle(month, false)
-  const dayNum = reduceToSingle(day, false)
-  return Math.abs(monthNum - dayNum)
+export function calculatePersonality(name: string): number {
+  const consonants = name.toLowerCase().split('').filter((c) => LETTER_VALUES[c] && !VOWELS.includes(c))
+  const sum = consonants.reduce((a, c) => a + LETTER_VALUES[c], 0)
+  return reduceToSingle(sum, true)
+}
+
+export interface NumerologyResult {
+  life_path: number
+  soul_urge: number
+  expression: number
+  personality: number
+  master_numbers: number[]
 }
 
 export interface NumerologyData {
-  core: number
-  desire: number
-  bond: number
-  friction: number
+  life_path: number
+  soul_urge: number
+  expression: number
+  personality: number
   meanings: {
-    core: string
-    desire: string
-    bond: string
-    friction: string
+    life_path: string
+    soul_urge: string
+    expression: string
+    personality: string
   }
 }
 
 export function calculateNumerology(name: string, dob: string): NumerologyData {
-  const core = calculateLifePath(dob)
-  const desire = calculateSoulUrge(name)
-  const bond = calculateExpression(name)
-  const friction = calculateChallenge(dob)
+  const life_path = calculateLifePath(dob)
+  const soul_urge = calculateSoulUrge(name)
+  const expression = calculateExpression(name)
+  const personality = calculatePersonality(name)
 
   return {
-    core,
-    desire,
-    bond,
-    friction,
+    life_path,
+    soul_urge,
+    expression,
+    personality,
     meanings: {
-      core:
-        NUMBER_MEANINGS.core[core] ||
-        NUMBER_MEANINGS.core[reduceToSingle(core, false)] ||
+      life_path:
+        NUMBER_MEANINGS.life_path[life_path] ||
+        NUMBER_MEANINGS.life_path[reduceToSingle(life_path, false)] ||
         'The Seeker',
-      desire: NUMBER_MEANINGS.desire[desire] || 'You crave depth',
-      bond: NUMBER_MEANINGS.bond[bond] || 'You attach deeply',
-      friction: NUMBER_MEANINGS.friction[friction] || 'Imbalance breaks you',
+      soul_urge: NUMBER_MEANINGS.soul_urge[soul_urge] || 'You crave depth',
+      expression: NUMBER_MEANINGS.expression[expression] || 'You attach deeply',
+      personality: NUMBER_MEANINGS.personality[personality] || 'Others see you as unique',
     },
+  }
+}
+
+export function calculateNumerologyResult(fullName: string, birthDate: string): NumerologyResult {
+  const life_path = calculateLifePath(birthDate)
+  const soul_urge = calculateSoulUrge(fullName)
+  const expression = calculateExpression(fullName)
+  const personality = calculatePersonality(fullName)
+
+  // Identify master numbers
+  const master_numbers: number[] = []
+  ;[life_path, soul_urge, expression, personality].forEach((num) => {
+    if ([11, 22, 33].includes(num) && !master_numbers.includes(num)) {
+      master_numbers.push(num)
+    }
+  })
+
+  return {
+    life_path,
+    soul_urge,
+    expression,
+    personality,
+    master_numbers,
   }
 }

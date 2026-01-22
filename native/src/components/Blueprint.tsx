@@ -12,7 +12,7 @@ import Animated, {
 import Svg, {Defs, Pattern, Line, Rect, RadialGradient, Stop} from 'react-native-svg'
 import {colors, sigilColors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
-import type {NumerologyData} from '../lib/numerology'
+import type {ScanOutput} from '../lib/scanOutput'
 
 // easeOutCubic for flip animation - matching prototype
 const FLIP_DURATION = 800
@@ -21,32 +21,32 @@ const LAYOUT_DURATION = 700
 const LAYOUT_EASING = Easing.bezier(0.77, 0, 0.175, 1)
 
 interface BlueprintProps {
-  data: NumerologyData
+  data: ScanOutput
   onSearch: () => void
 }
 
 // Energy color mapping
 const ENERGY_COLORS = {
-  core: {
-    color: sigilColors.core,
+  life_path: {
+    color: sigilColors.life_path,
     glow: 'rgba(99, 102, 241, 0.4)',
     hoverBorder: 'rgba(99, 102, 241, 0.5)',
     expandedBg: 'rgba(99, 102, 241, 0.15)',
   },
-  desire: {
-    color: sigilColors.desire,
+  soul_urge: {
+    color: sigilColors.soul_urge,
     glow: 'rgba(245, 158, 11, 0.4)',
     hoverBorder: 'rgba(245, 158, 11, 0.5)',
     expandedBg: 'rgba(245, 158, 11, 0.15)',
   },
-  bond: {
-    color: sigilColors.bond,
+  expression: {
+    color: sigilColors.expression,
     glow: 'rgba(16, 185, 129, 0.4)',
     hoverBorder: 'rgba(16, 185, 129, 0.5)',
     expandedBg: 'rgba(16, 185, 129, 0.15)',
   },
-  friction: {
-    color: sigilColors.friction,
+  personality: {
+    color: sigilColors.personality,
     glow: 'rgba(244, 114, 182, 0.4)',
     hoverBorder: 'rgba(244, 114, 182, 0.5)',
     expandedBg: 'rgba(244, 114, 182, 0.15)',
@@ -55,37 +55,37 @@ const ENERGY_COLORS = {
 
 // Detailed info
 const DETAILED_INFO = {
-  core: {
+  life_path: {
     subtitle: 'Life Path Number',
     details:
       "Your fundamental nature and life purpose. This is the essence of who you are and what you're meant to become. It influences every major decision and relationship in your life.",
     resonance:
       "In love, this number determines your core compatibility with others. It's the bedrock of lasting connections.",
   },
-  desire: {
+  soul_urge: {
     subtitle: 'Soul Urge Number',
     details:
       'Your innermost yearnings and motivations. This reveals what drives you at the deepest level and what you need to feel fulfilled in love and life.',
     resonance:
       "Understanding your desires helps you recognize when a partner can truly satisfy your soul's needs.",
   },
-  bond: {
+  expression: {
     subtitle: 'Expression Number',
     details:
       'How you connect and relate to others. This shows your natural attachment style and the ways you build emotional bonds with those you love.',
     resonance:
       'Your bonding style determines how you express love and what makes you feel connected to another person.',
   },
-  friction: {
-    subtitle: 'Challenge Number',
+  personality: {
+    subtitle: 'Personality Number',
     details:
-      'Your vulnerability points in relationships. Understanding this helps you recognize warning signs and protect your heart from incompatible energies.',
+      'How others perceive you at first impression. This reveals the outer mask you wear and how you present yourself to the world.',
     resonance:
-      'Knowing your friction points allows you to identify potential conflicts before they become deal-breakers.',
+      'Understanding your outward persona helps you attract compatible partners who see the real you.',
   },
 }
 
-type TileKey = 'core' | 'desire' | 'bond' | 'friction'
+type TileKey = 'life_path' | 'soul_urge' | 'expression' | 'personality'
 
 const GRID_GAP = 24
 const GRID_HEIGHT = 500
@@ -402,11 +402,66 @@ export function Blueprint({data, onSearch}: BlueprintProps) {
     setExpandedKey(prev => (prev === key ? null : key))
   }, [])
 
+  // Generate meanings from number values
+  const getMeaning = (num: number, type: string): string => {
+    const meanings: Record<string, Record<number, string>> = {
+      life_path: {
+        1: 'The Independent Leader',
+        2: 'The Sensitive Mediator',
+        3: 'The Creative Expresser',
+        4: 'The Stable Builder',
+        5: 'The Free Spirit',
+        6: 'The Nurturing Lover',
+        7: 'The Deep Seeker',
+        8: 'The Powerful Achiever',
+        9: 'The Universal Healer',
+        11: 'The Illuminated Visionary',
+        22: 'The Master Builder',
+        33: 'The Master Teacher',
+      },
+      soul_urge: {
+        1: 'You crave independence',
+        2: 'You crave harmony',
+        3: 'You crave self-expression',
+        4: 'You crave security',
+        5: 'You crave freedom',
+        6: 'You crave love',
+        7: 'You crave knowledge',
+        8: 'You crave power',
+        9: 'You crave service',
+      },
+      expression: {
+        1: 'You attach through admiration',
+        2: 'You attach through safety',
+        3: 'You attach through creativity',
+        4: 'You attach through reliability',
+        5: 'You attach through excitement',
+        6: 'You attach through devotion',
+        7: 'You attach through intellect',
+        8: 'You attach through ambition',
+        9: 'You attach through depth',
+      },
+      personality: {
+        1: 'Others see you as a leader',
+        2: 'Others see you as diplomatic',
+        3: 'Others see you as creative',
+        4: 'Others see you as reliable',
+        5: 'Others see you as dynamic',
+        6: 'Others see you as nurturing',
+        7: 'Others see you as mysterious',
+        8: 'Others see you as powerful',
+        9: 'Others see you as compassionate',
+      },
+    }
+    return meanings[type]?.[num] || meanings[type]?.[num % 10] || 'Unique expression'
+  }
+
+  const numerology = data.numerology
   const tiles: {key: TileKey; title: string; number: number; meaning: string}[] = [
-    {key: 'core', title: 'CORE', number: data.core, meaning: data.meanings.core},
-    {key: 'desire', title: 'DESIRE', number: data.desire, meaning: data.meanings.desire},
-    {key: 'bond', title: 'BOND', number: data.bond, meaning: data.meanings.bond},
-    {key: 'friction', title: 'FRICTION', number: data.friction, meaning: data.meanings.friction},
+    {key: 'life_path', title: 'LIFE PATH', number: numerology.life_path, meaning: getMeaning(numerology.life_path, 'life_path')},
+    {key: 'soul_urge', title: 'SOUL URGE', number: numerology.soul_urge, meaning: getMeaning(numerology.soul_urge, 'soul_urge')},
+    {key: 'expression', title: 'EXPRESSION', number: numerology.expression, meaning: getMeaning(numerology.expression, 'expression')},
+    {key: 'personality', title: 'PERSONALITY', number: numerology.personality, meaning: getMeaning(numerology.personality, 'personality')},
   ]
 
   return (
@@ -415,11 +470,6 @@ export function Blueprint({data, onSearch}: BlueprintProps) {
       <View style={[styles.gridBg, {width: gridWidth, height: GRID_HEIGHT + 80}]}>
         <BlueprintGrid />
       </View>
-
-      {/* Title */}
-      <Text style={styles.title}>
-        Your num<Text style={styles.titleAccent}>Eros</Text> Signature
-      </Text>
 
       {/* Grid */}
       <View style={[styles.grid, {width: gridWidth, height: GRID_HEIGHT}]}>
@@ -459,17 +509,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -20,
     opacity: 0.5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '300',
-    color: colors.textSecondary,
-    letterSpacing: 2.4,
-    marginBottom: 48,
-    fontFamily: fonts.serif,
-  },
-  titleAccent: {
-    fontStyle: 'italic',
   },
   grid: {
     position: 'relative',

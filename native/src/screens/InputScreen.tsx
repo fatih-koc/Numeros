@@ -7,14 +7,15 @@ import {InputForm} from '../components/InputForm'
 import {useEngine} from '../contexts'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
+import type {UserInput} from '../lib/scanOutput'
 
 export function InputScreen() {
   const navigation = useNavigation()
   const {setExtractionParams} = useEngine()
 
-  const handleFormSubmit = (name: string, dob: string) => {
+  const handleFormSubmit = (userInput: UserInput) => {
     // Store params for extraction, then go back to Idle
-    setExtractionParams({name, dob})
+    setExtractionParams(userInput)
     navigation.goBack()
   }
 

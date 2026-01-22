@@ -1,10 +1,10 @@
 import React, {createContext, useContext, useState, useCallback, ReactNode} from 'react'
-import type {NumerologyData} from '../lib/numerology'
+import type {ScanOutput} from '../lib/scanOutput'
 
 interface NumerologyContextValue {
-  numerologyData: NumerologyData | null
-  setNumerologyData: (data: NumerologyData | null) => void
-  clearNumerologyData: () => void
+  scanOutput: ScanOutput | null
+  setScanOutput: (data: ScanOutput | null) => void
+  clearScanOutput: () => void
 }
 
 const NumerologyContext = createContext<NumerologyContextValue | null>(null)
@@ -14,22 +14,22 @@ interface NumerologyProviderProps {
 }
 
 export function NumerologyProvider({children}: NumerologyProviderProps) {
-  const [numerologyData, setNumerologyDataState] = useState<NumerologyData | null>(null)
+  const [scanOutput, setScanOutputState] = useState<ScanOutput | null>(null)
 
-  const setNumerologyData = useCallback((data: NumerologyData | null) => {
-    setNumerologyDataState(data)
+  const setScanOutput = useCallback((data: ScanOutput | null) => {
+    setScanOutputState(data)
   }, [])
 
-  const clearNumerologyData = useCallback(() => {
-    setNumerologyDataState(null)
+  const clearScanOutput = useCallback(() => {
+    setScanOutputState(null)
   }, [])
 
   return (
     <NumerologyContext.Provider
       value={{
-        numerologyData,
-        setNumerologyData,
-        clearNumerologyData,
+        scanOutput,
+        setScanOutput,
+        clearScanOutput,
       }}>
       {children}
     </NumerologyContext.Provider>

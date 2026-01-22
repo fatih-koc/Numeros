@@ -1,10 +1,10 @@
-import React from 'react'
-import {StyleSheet, View, TouchableOpacity, Image, Alert, ScrollView} from 'react-native'
+import React, {useEffect} from 'react'
+import {StyleSheet, TouchableOpacity, Image, Alert, ScrollView} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import {ScreenWrapper} from '../components/ScreenWrapper'
-import {Blueprint} from '../components/Blueprint'
+import {ChartTabs} from '../components/ChartTabs'
 import {useNumerology, useEngine} from '../contexts'
 import {colors} from '../lib/colors'
 import type {RootStackParamList} from '../navigation/types'
@@ -13,7 +13,7 @@ type BlueprintNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Bl
 
 export function BlueprintScreen() {
   const navigation = useNavigation<BlueprintNavigationProp>()
-  const {numerologyData, clearNumerologyData} = useNumerology()
+  const {scanOutput, clearScanOutput} = useNumerology()
   const {resetEngine} = useEngine()
 
   const handleSearchResonance = () => {
@@ -24,15 +24,26 @@ export function BlueprintScreen() {
     )
   }
 
+  const handleUpgradeChart = () => {
+    clearScanOutput()
+    resetEngine()
+    navigation.navigate('Input')
+  }
+
   const handleLogoPress = () => {
-    clearNumerologyData()
+    clearScanOutput()
     resetEngine()
     navigation.popToTop()
   }
 
-  if (!numerologyData) {
-    // Navigate back if no data
-    navigation.goBack()
+  // Navigate back if no data (must be in useEffect to avoid setState during render)
+  useEffect(() => {
+    if (!scanOutput) {
+      navigation.goBack()
+    }
+  }, [scanOutput, navigation])
+
+  if (!scanOutput) {
     return null
   }
 
@@ -55,7 +66,11 @@ export function BlueprintScreen() {
         </TouchableOpacity>
 
         <Animated.View entering={FadeIn.duration(500)} style={styles.screenContainer}>
-          <Blueprint data={numerologyData} onSearch={handleSearchResonance} />
+          <ChartTabs
+            scanData={scanOutput}
+            onSearch={handleSearchResonance}
+            onUpgrade={handleUpgradeChart}
+          />
         </Animated.View>
       </ScrollView>
     </ScreenWrapper>

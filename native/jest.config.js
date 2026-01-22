@@ -1,3 +1,3 @@
-module.eports = 
+module.exports = {
   preset: 'react-native',
-;
+}

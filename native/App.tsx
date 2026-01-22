@@ -1,124 +1,357 @@
-import React from "react"
-import { View, StyleSheet } from "react-native"
+import React, {useState, useCallback} from 'react'
 import {
-  Canvas,
-  Circle,
-  Line,
-  Group,
+  StyleSheet,
+  View,
   Text,
-  useFont,
-} from "@shopify/react-native-skia"
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+} from 'react-native'
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context'
+import {useFonts} from 'expo-font'
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated'
 
-/* =======================
-   Chart Constants
-======================= */
+import {Background} from './src/components/Background'
+import {Particles} from './src/components/Particles'
+import {LoveEngine} from './src/components/LoveEngine'
+import {InputForm} from './src/components/InputForm'
+import {Blueprint} from './src/components/Blueprint'
+import {calculateNumerology, type NumerologyData} from './src/lib/numerology'
+import {colors} from './src/lib/colors'
+import {fonts, fontAssets} from './src/lib/fonts'
 
-const SIZE = 340
-const R = SIZE / 2
-const FONT_SIZE = 10
+type Screen = 'idle' | 'input' | 'blueprint'
 
-const degToRad = (deg: number) => ((deg - 180) * Math.PI) / 180
-const polar = (deg: number, radius: number) => ({
-  x: R + Math.cos(degToRad(deg)) * radius,
-  y: R + Math.sin(degToRad(deg)) * radius,
-})
+interface EngineState {
+  isCalculating: boolean
+  isIntense: boolean
+  resultNumber: number | null
+  showResult: boolean
+  activeNumber: number | null
+  currentPhase: number | null
+  showSigils: {
+    core: boolean
+    desire: boolean
+    bond: boolean
+    friction: boolean
+  }
+}
 
-/* =======================
-   Example EPHEMERIS JSON
-   Expandable with planets, nodes, asteroids
-======================= */
-
-const CHART = {
-  ascendant: 213.42,
-  houses: Array.from({ length: 12 }).map((_, i) => ({
-    house: i + 1,
-    degree: [213.42, 243.42, 273.42, 303.42, 333.42, 3.42, 33.42, 63.42, 93.42, 123.42, 153.42, 183.42][i],
-  })),
-  planets: {
-    Sun: 56.32,
-    Moon: 144.11,
-    Mercury: 32.11,
-    Venus: 81.77,
-    Mars: 201.55,
-    Jupiter: 110.12,
-    Saturn: 198.55,
-    Uranus: 250.23,
-    Neptune: 280.44,
-    Pluto: 305.12,
-    Chiron: 175.44,
-    Node: 190.12,
-    Lilith: 88.22,
+const initialEngineState: EngineState = {
+  isCalculating: false,
+  isIntense: false,
+  resultNumber: null,
+  showResult: false,
+  activeNumber: null,
+  currentPhase: null,
+  showSigils: {
+    core: false,
+    desire: false,
+    bond: false,
+    friction: false,
   },
 }
 
-/* =======================
-   Component
-======================= */
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default function App() {
-  // Load TTF font via useFont
-  const font = useFont(require("./assets/fonts/Inter-Regular.ttf"), FONT_SIZE)
-  if (!font) return null
+  const [fontsLoaded] = useFonts(fontAssets)
+  const [currentScreen, setCurrentScreen] = useState<Screen>('idle')
+  const [statusText, setStatusText] = useState('numEros is idle')
+  const [subStatus, setSubStatus] = useState('Your love field is unaligned')
+  const [numerologyData, setNumerologyData] = useState<NumerologyData | null>(null)
+  const [engineState, setEngineState] = useState<EngineState>(initialEngineState)
+
+  // Status text pulse animation
+  const statusOpacity = useSharedValue(1)
+
+  const startStatusPulse = useCallback(() => {
+    statusOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.6, {duration: 750, easing: Easing.inOut(Easing.ease)}),
+        withTiming(1, {duration: 750, easing: Easing.inOut(Easing.ease)}),
+      ),
+      -1,
+      true,
+    )
+  }, [statusOpacity])
+
+  const stopStatusPulse = useCallback(() => {
+    statusOpacity.value = withTiming(1, {duration: 300})
+  }, [statusOpacity])
+
+  const statusTextStyle = useAnimatedStyle(() => ({
+    opacity: statusOpacity.value,
+  }))
+
+  const runExtraction = async (name: string, dob: string) => {
+    const phases = [
+      {text: 'Extracting Life Path...', duration: 2000, sigil: null},
+      {text: 'Decoding Desire...', duration: 2000, sigil: 'desire' as const},
+      {text: 'Mapping Bond Pattern...', duration: 2000, sigil: 'bond' as const},
+      {text: 'Calculating Friction...', duration: 2000, sigil: 'friction' as const},
+      {text: 'Assembling Love Blueprint...', duration: 2000, sigil: 'core' as const},
+    ]
+
+    setEngineState((prev) => ({
+      ...prev,
+      isCalculating: true,
+      showSigils: {core: false, desire: false, bond: false, friction: false},
+    }))
+    setSubStatus('Reading your signature')
+    startStatusPulse()
+
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i]
+      setStatusText(phase.text)
+
+      if (phase.sigil) {
+        setEngineState((prev) => ({
+          ...prev,
+          showSigils: {
+            ...prev.showSigils,
+            [phase.sigil]: true,
+          },
+        }))
+      }
+
+      setEngineState((prev) => ({...prev, activeNumber: i, currentPhase: i}))
+      await sleep(phase.duration)
+    }
+
+    // Intensify for final calculation
+    setEngineState((prev) => ({...prev, isIntense: true}))
+    await sleep(1500)
+
+    // Calculate results
+    const data = calculateNumerology(name, dob)
+    setNumerologyData(data)
+
+    // Show result number briefly
+    setEngineState((prev) => ({
+      ...prev,
+      resultNumber: data.core,
+      showResult: true,
+    }))
+    await sleep(1500)
+
+    // Reset and transition
+    stopStatusPulse()
+    setEngineState(initialEngineState)
+    setCurrentScreen('blueprint')
+  }
+
+  const handleBeginAlignment = () => {
+    setCurrentScreen('input')
+  }
+
+  const handleFormSubmit = async (name: string, dob: string) => {
+    setCurrentScreen('idle')
+    await sleep(500)
+    await runExtraction(name, dob)
+  }
+
+  const handleSearchResonance = () => {
+    Alert.alert(
+      'Coming Soon',
+      'Universe scan would begin here...\n\nThis prototype shows the extraction ritual. The full app would continue to the scanning and matching screens.',
+      [{text: 'OK'}],
+    )
+  }
+
+  const handleBackToIdle = () => {
+    setCurrentScreen('idle')
+    setStatusText('numEros is idle')
+    setSubStatus('Your love field is unaligned')
+    setNumerologyData(null)
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.accentViolet} />
+      </View>
+    )
+  }
 
   return (
-    <View style={styles.container}>
-      <Canvas style={{ width: SIZE, height: SIZE }}>
-        {/* Outer rings */}
-        <Circle cx={R} cy={R} r={R - 4} color="#0b0c10" />
-        <Circle cx={R} cy={R} r={R - 28} color="#13141b" />
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        {/* Background layer - z-index 0 */}
+        <Background />
 
-        {/* Rotate wheel by Ascendant */}
-        <Group origin={{ x: R, y: R }} transform={[{ rotate: -degToRad(CHART.ascendant) }]}>
+        {/* Particles layer - z-index 1, behind content */}
+        <View style={styles.particlesLayer}>
+          <Particles />
+        </View>
 
-          {/* Zodiac divisions (12 × 30°) */}
-          {Array.from({ length: 12 }).map((_, i) => {
-            const p = polar(i * 30, R - 6)
-            return <Line key={i} p1={{ x: R, y: R }} p2={p} strokeWidth={1} color="#2a2d34" />
-          })}
+        {/* Content layer - z-index 10, above particles */}
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            {/* Logo */}
+            <TouchableOpacity
+              onPress={handleBackToIdle}
+              activeOpacity={0.7}
+              style={styles.logoContainer}>
+              <Image
+                source={require('./assets/images/numeros_text.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
 
-          {/* Houses */}
-          {CHART.houses.map((h) => {
-            const p = polar(h.degree, R - 6)
-            const label = polar(h.degree + 2, R - 44)
-            return (
-              <Group key={h.house}>
-                <Line p1={{ x: R, y: R }} p2={p} strokeWidth={2} color="#3a3f48" />
-                <Text x={label.x - 6} y={label.y + 4} text={String(h.house)} font={font} color="#7c8496" />
-              </Group>
-            )
-          })}
+            {/* Screen: Idle */}
+            {currentScreen === 'idle' && (
+              <Animated.View
+                entering={FadeIn.duration(500)}
+                exiting={FadeOut.duration(300)}
+                style={styles.screenContainer}>
+                <LoveEngine {...engineState} />
 
-          {/* Cardinal axes (Asc/Desc MC/IC) */}
-          <Line p1={{ x: R, y: 0 }} p2={{ x: R, y: SIZE }} strokeWidth={2} color="#4b5160" />
-          <Line p1={{ x: 0, y: R }} p2={{ x: SIZE, y: R }} strokeWidth={2} color="#4b5160" />
+                <View style={styles.statusContainer}>
+                  <Text style={styles.statusLabel}>LOVE ENGINE</Text>
+                  <Animated.Text style={[styles.statusText, statusTextStyle]}>
+                    {statusText}
+                  </Animated.Text>
+                  <Text style={styles.subStatus}>{subStatus}</Text>
+                </View>
 
-          {/* Planets, nodes, asteroids */}
-          {Object.entries(CHART.planets).map(([name, deg]) => {
-            const pos = polar(deg, R * 0.65)
-            const label = polar(deg, R * 0.75)
-            return (
-              <Group key={name}>
-                <Circle cx={pos.x} cy={pos.y} r={6} color="#f2f3f7" />
-                <Text x={label.x - 10} y={label.y + 4} text={name.slice(0, 2)} font={font} color="#cfd2dc" />
-              </Group>
-            )
-          })}
+                {!engineState.isCalculating && (
+                  <Animated.View entering={FadeIn.delay(300).duration(500)}>
+                    <TouchableOpacity
+                      onPress={handleBeginAlignment}
+                      style={styles.primaryButton}
+                      activeOpacity={0.8}>
+                      <Text style={styles.primaryButtonText}>BEGIN ALIGNMENT</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+              </Animated.View>
+            )}
 
-        </Group>
-      </Canvas>
-    </View>
+            {/* Screen: Input */}
+            {currentScreen === 'input' && (
+              <Animated.View
+                entering={FadeIn.duration(500)}
+                exiting={FadeOut.duration(300)}
+                style={styles.screenContainer}>
+                <View style={styles.statusContainer}>
+                  <Text style={styles.statusLabel}>IDENTITY INPUT</Text>
+                  <Text style={styles.statusText}>Enter your human signature</Text>
+                  <Text style={styles.subStatus}>
+                    These values encode how you love
+                  </Text>
+                </View>
+
+                <InputForm onSubmit={handleFormSubmit} />
+              </Animated.View>
+            )}
+
+            {/* Screen: Blueprint */}
+            {currentScreen === 'blueprint' && numerologyData && (
+              <Animated.View
+                entering={FadeIn.duration(500)}
+                exiting={FadeOut.duration(300)}
+                style={styles.screenContainer}>
+                <Blueprint data={numerologyData} onSearch={handleSearchResonance} />
+              </Animated.View>
+            )}
+          </View>
+        </SafeAreaView>
+      </View>
+    </SafeAreaProvider>
   )
 }
 
-/* =======================
-   Styles
-======================= */
-
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.bgDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#050509",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: colors.bgDeep,
+  },
+  particlesLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+    elevation: 1,
+  },
+  safeArea: {
+    flex: 1,
+    zIndex: 10,
+    elevation: 10,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 20,
+  },
+  logoContainer: {
+    marginBottom: 24,
+    opacity: 0.4,
+  },
+  logo: {
+    width: 96,
+    height: 32,
+    tintColor: colors.textPrimary,
+  },
+  screenContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
+    width: '100%',
+  },
+  statusContainer: {
+    alignItems: 'center',
+    minHeight: 80,
+  },
+  statusLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 4,
+    color: colors.textDim,
+    marginBottom: 8,
+  },
+  statusText: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: colors.textSecondary,
+    marginBottom: 4,
+    fontFamily: fonts.serif,
+  },
+  subStatus: {
+    fontSize: 14,
+    color: colors.textDim,
+    fontFamily: fonts.serifItalic,
+  },
+  primaryButton: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderRadius: 50,
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    letterSpacing: 3,
+    color: colors.textPrimary,
   },
 })

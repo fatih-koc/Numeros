@@ -1,56 +1,60 @@
 import React from 'react'
-import {StyleSheet, View, Dimensions} from 'react-native'
-import Svg, {
-  Defs,
-  RadialGradient,
-  LinearGradient,
-  Stop,
+import {StyleSheet, Dimensions, View} from 'react-native'
+import {
+  Canvas,
   Rect,
-} from 'react-native-svg'
+  LinearGradient,
+  RadialGradient,
+  vec,
+} from '@shopify/react-native-skia'
 import {colors} from '../lib/colors'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 export function Background() {
   return (
-    <View style={styles.container}>
-      <Svg
-        width={SCREEN_WIDTH}
-        height={SCREEN_HEIGHT}
-        style={StyleSheet.absoluteFill}>
-        <Defs>
-          {/* Base vertical gradient */}
-          <LinearGradient id="baseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={colors.bgDeep} stopOpacity="1" />
-            <Stop offset="50%" stopColor={colors.bgMid} stopOpacity="1" />
-            <Stop offset="100%" stopColor={colors.bgDeep} stopOpacity="1" />
-          </LinearGradient>
+    <View style={styles.container} pointerEvents="none">
+      <Canvas style={styles.canvas}>
+        {/* Base vertical gradient */}
+        <Rect x={0} y={0} width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <LinearGradient
+            start={vec(SCREEN_WIDTH / 2, 0)}
+            end={vec(SCREEN_WIDTH / 2, SCREEN_HEIGHT)}
+            colors={[colors.bgDeep, colors.bgMid, colors.bgDeep]}
+            positions={[0, 0.5, 1]}
+          />
+        </Rect>
 
-          {/* Violet glow */}
-          <RadialGradient id="glowViolet" cx="50%" cy="50%" rx="40%" ry="25%">
-            <Stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.15" />
-            <Stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
-          </RadialGradient>
+        {/* Violet glow - center */}
+        <Rect x={0} y={0} width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <RadialGradient
+            c={vec(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5)}
+            r={SCREEN_WIDTH * 0.5}
+            colors={['rgba(139, 92, 246, 0.15)', 'rgba(139, 92, 246, 0)']}
+            positions={[0, 1]}
+          />
+        </Rect>
 
-          {/* Pink glow */}
-          <RadialGradient id="glowPink" cx="30%" cy="20%" rx="30%" ry="40%">
-            <Stop offset="0%" stopColor="#EC4899" stopOpacity="0.1" />
-            <Stop offset="100%" stopColor="#EC4899" stopOpacity="0" />
-          </RadialGradient>
+        {/* Pink glow - top left */}
+        <Rect x={0} y={0} width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <RadialGradient
+            c={vec(SCREEN_WIDTH * 0.3, SCREEN_HEIGHT * 0.2)}
+            r={SCREEN_WIDTH * 0.4}
+            colors={['rgba(236, 72, 153, 0.1)', 'rgba(236, 72, 153, 0)']}
+            positions={[0, 1]}
+          />
+        </Rect>
 
-          {/* Indigo glow */}
-          <RadialGradient id="glowIndigo" cx="70%" cy="80%" rx="25%" ry="30%">
-            <Stop offset="0%" stopColor="#4F46E5" stopOpacity="0.1" />
-            <Stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
-          </RadialGradient>
-        </Defs>
-
-        {/* Layers */}
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#baseGradient)" />
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowViolet)" />
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowPink)" />
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowIndigo)" />
-      </Svg>
+        {/* Indigo glow - bottom right */}
+        <Rect x={0} y={0} width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <RadialGradient
+            c={vec(SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.8)}
+            r={SCREEN_WIDTH * 0.35}
+            colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0)']}
+            positions={[0, 1]}
+          />
+        </Rect>
+      </Canvas>
     </View>
   )
 }
@@ -59,6 +63,8 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.bgDeep,
-    zIndex: 0,
+  },
+  canvas: {
+    flex: 1,
   },
 })

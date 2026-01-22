@@ -65,11 +65,11 @@ const createTrianglePath = (size: number) => {
 }
 
 // Create diamond path for sigils
-const createDiamondPath = (size: number) => {
+const createDiamondPath = (size: number, scale: number = 1) => {
   const path = Skia.Path.Make()
   const cx = ENGINE_SIZE / 2
   const cy = ENGINE_SIZE / 2
-  const half = size / 2
+  const half = (size * scale) / 2
 
   path.moveTo(cx, cy - half) // Top
   path.lineTo(cx + half, cy) // Right
@@ -265,7 +265,7 @@ export function LoveEngine({
 
   // Skia paths
   const trianglePath = createTrianglePath(60)
-  const bondDiamondPath = createDiamondPath(55)
+  const bondDiamondPath = createDiamondPath(55, 0.8) // scale-80 like prototype
   const frictionDiamondPath = createDiamondPath(45)
 
   return (
@@ -288,6 +288,21 @@ export function LoveEngine({
 
       {/* Skia Canvas for Sigils with Glow Effects */}
       <Canvas style={styles.sigilCanvas}>
+        {/* Inner Core with complex radial gradient - matching prototype */}
+        <Circle cx={ENGINE_SIZE / 2} cy={ENGINE_SIZE / 2} r={ENGINE_SIZE * 0.2}>
+          <RadialGradient
+            c={vec(ENGINE_SIZE * 0.35, ENGINE_SIZE * 0.35)}
+            r={ENGINE_SIZE * 0.25}
+            colors={[
+              'rgba(255, 255, 255, 0.1)',
+              'rgba(139, 92, 246, 0.3)',
+              'rgba(79, 70, 229, 0.4)',
+              'transparent',
+            ]}
+            positions={[0, 0.3, 0.7, 1]}
+          />
+        </Circle>
+
         {/* Core Sigil - Circle with glow */}
         <Group opacity={coreOp}>
           {/* Outer glow */}
@@ -298,7 +313,7 @@ export function LoveEngine({
             color={sigilColors.core}
             style="stroke"
             strokeWidth={3}>
-            <BlurMask blur={15} style="solid" />
+            <BlurMask blur={20} style="solid" />
           </Circle>
           {/* Main circle */}
           <Circle
@@ -319,7 +334,7 @@ export function LoveEngine({
             color={sigilColors.desire}
             style="stroke"
             strokeWidth={3}>
-            <BlurMask blur={12} style="solid" />
+            <BlurMask blur={15} style="solid" />
           </Path>
           {/* Main triangle */}
           <Path
@@ -338,7 +353,7 @@ export function LoveEngine({
             color={sigilColors.bond}
             style="stroke"
             strokeWidth={3}>
-            <BlurMask blur={12} style="solid" />
+            <BlurMask blur={20} style="solid" />
           </Path>
           {/* Main diamond */}
           <Path
@@ -357,7 +372,7 @@ export function LoveEngine({
             color={sigilColors.friction}
             style="stroke"
             strokeWidth={3}>
-            <BlurMask blur={10} style="solid" />
+            <BlurMask blur={20} style="solid" />
           </Path>
           {/* Main diamond */}
           <Path
@@ -367,15 +382,6 @@ export function LoveEngine({
             strokeWidth={2}
           />
         </Group>
-
-        {/* Inner Core Glow */}
-        <Circle cx={ENGINE_SIZE / 2} cy={ENGINE_SIZE / 2} r={ENGINE_SIZE * 0.2}>
-          <RadialGradient
-            c={vec(ENGINE_SIZE / 2, ENGINE_SIZE / 2)}
-            r={ENGINE_SIZE * 0.2}
-            colors={['rgba(139, 92, 246, 0.4)', 'rgba(139, 92, 246, 0)']}
-          />
-        </Circle>
       </Canvas>
 
       {/* Inner pulsing core glow (animated) */}
@@ -428,9 +434,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '400',
     color: colors.textPrimary,
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+    textShadowColor: 'rgba(255, 255, 255, 0.6)',
     textShadowOffset: {width: 0, height: 0},
-    textShadowRadius: 12,
+    textShadowRadius: 20,
   },
   sigilCanvas: {
     position: 'absolute',
@@ -461,7 +467,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textShadowColor: 'rgba(139, 92, 246, 0.6)',
     textShadowOffset: {width: 0, height: 0},
-    textShadowRadius: 20,
+    textShadowRadius: 40,
     fontFamily: fonts.serif,
   },
 })

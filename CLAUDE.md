@@ -19,49 +19,127 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 
 ---
 
+## Native App Implementation Status (React Native/Expo)
+
+**Location:** `/apps/native`
+**Stack:** Expo 52, React Native 0.76, TypeScript
+**Animations:** react-native-reanimated 3.16
+**Graphics:** @shopify/react-native-skia, expo-gl
+
+### ✅ Completed Components
+
+#### Background.tsx
+- **Skia Canvas** for all rendering (no SVG)
+- LinearGradient: bgDeep → bgMid → bgDeep
+- RadialGradient glows: violet (center), pink (top-left), indigo (bottom-right)
+- Noise texture overlay: 0.02 alpha, multiply blend mode
+
+#### LoveEngine.tsx
+- Rotating number track (1-9) with counter-rotation to keep numbers upright
+- Shader canvas with 5 phase-based shaders
+- Sigils with Skia (Circle, Triangle, Diamond shapes)
+- Inner core with 4-stop radial gradient
+- Bond sigil scale 0.8
+- Glow radii: 15-20px blur on sigils, 20px on active numbers, 40px on result
+
+#### Blueprint.tsx
+- 2x2 tile grid with expand/collapse animation
+- **Animation**: 700ms easeInOutQuart `Easing.bezier(0.77, 0, 0.175, 1)`
+- Height-animated subtitle and details (collapse to 0 when not expanded)
+- Blueprint grid background (SVG pattern, 24×24px)
+- Close button with fade-in animation
+- "Tap to expand" hint text
+- Title: "Your num*Eros* Signature"
+
+#### InputForm.tsx
+- Animated focus states on inputs (border color + shadow glow)
+- 300ms easeInOutQuart transitions
+- Button press animation (scale 0.98)
+- iOS date picker with "Done" button
+
+#### Particles.tsx
+- 25 floating particles with staggered animations
+- Bottom-to-top translation with opacity fade
+
+#### ShaderCanvas.tsx
+- 5 GLSL shaders via Skia RuntimeEffect
+- Phase-based shader selection during calculation
+
+### Animation Standards
+
+**Easing:** `Easing.bezier(0.77, 0, 0.175, 1)` (easeInOutQuart)
+**Durations:**
+- Tile expand/collapse: 700ms
+- Entrance animations: 600ms
+- Focus states: 300ms
+- Button press: 100ms in, 200ms out
+
+### File Structure
+
+```
+native/
+├── App.tsx                    # Main orchestrator
+├── src/
+│   ├── components/
+│   │   ├── Background.tsx     # Skia gradient + noise
+│   │   ├── Blueprint.tsx      # Results grid with expand
+│   │   ├── InputForm.tsx      # Name + DOB with focus states
+│   │   ├── LoveEngine.tsx     # Circular visualization
+│   │   ├── Particles.tsx      # Floating particles
+│   │   ├── ShaderCanvas.tsx   # WebGL shaders
+│   │   └── index.ts
+│   ├── lib/
+│   │   ├── colors.ts          # Color palette
+│   │   ├── fonts.ts           # Font definitions
+│   │   ├── numerology.ts      # Calculations
+│   │   └── index.ts
+│   └── types/
+│       └── webgl.d.ts
+├── assets/
+│   ├── fonts/                 # Garamond, Letter Gothic, Astronomicon
+│   └── images/
+└── ios/, android/             # Native projects
+```
+
+### Color Palette (lib/colors.ts)
+
+```typescript
+export const colors = {
+  bgDeep: '#0c0a1d',
+  bgMid: '#1a1533',
+  textPrimary: 'rgba(255, 255, 255, 0.95)',
+  textSecondary: 'rgba(255, 255, 255, 0.6)',
+  textDim: 'rgba(255, 255, 255, 0.5)',
+  accentViolet: '#8B5CF6',
+  accentPink: '#EC4899',
+  borderLight: 'rgba(255, 255, 255, 0.1)',
+}
+
+export const sigilColors = {
+  core: '#6366f1',
+  desire: '#f59e0b',
+  bond: '#10b981',
+  friction: '#f472b6',
+}
+```
+
+### Still Missing
+
+- Navigation (React Navigation)
+- API client integration
+- Auth context with SecureStore
+- Scan screen (match discovery)
+- Profile screen
+- Resonance screen (likes/matches)
+
+---
+
 ## Backend (Django)
 
 **Location:** `/apps/backend`
 **Framework:** Django 4.2+ with Django REST Framework
 **Database:** SQLite (dev) / PostgreSQL (prod)
 **Auth:** Token-based (DRF TokenAuthentication)
-
-### Django Apps
-
-| App | Purpose |
-|-----|---------|
-| `numeros/` | Main project settings, URLs |
-| `users/` | Custom User model, auth endpoints |
-| `matching/` | Compatibility engine, resonance system |
-| `chat/` | Placeholder for Phase 2 |
-
-### Key Models
-
-**User** (`users/models.py`):
-```python
-# Core fields
-email (USERNAME_FIELD), name, birth_date
-
-# Numerology (precomputed on registration)
-life_path, day_number, month_number, soul_urge, expression, challenge
-
-# Zodiac (precomputed)
-zodiac_animal, zodiac_element, zodiac_position
-
-# Preferences
-gender, seeking, location_lat, location_lng, use_turkish_letters
-```
-
-**CompatibilityCache** (`matching/models.py`):
-- Stores precomputed compatibility between user pairs
-- 5 axis scores: structure, dynamics, culture, affinity, time
-- Classification: match_type, risk_level, dominant_axis
-- Labels: headline, description, longevity_forecast
-
-**Resonance** (`matching/models.py`):
-- Tracks likes between users
-- Status: pending, mutual, declined, expired
-- `eros_activated_at` when mutual match occurs
 
 ### API Endpoints
 
@@ -74,53 +152,15 @@ gender, seeking, location_lat, location_lng, use_turkish_letters
 - `GET /api/profile/me` - Full user profile
 - `PUT /api/profile/me` - Update profile
 - `POST /api/profile/calculate` - Calculate numerology without account
-- `GET /api/profile/blueprint` - Detailed numerology meanings
 
 **Matching:**
-- `POST /api/match/scan` - Scan for matches (limit, min_score, match_types)
+- `POST /api/match/scan` - Scan for matches
 - `POST /api/match/evaluate` - Evaluate specific user compatibility
-- `GET /api/match/candidates` - Cached candidates
 
 **Resonance:**
 - `POST /api/resonance/resonate` - Like a user
 - `POST /api/resonance/decline` - Decline a user
-- `GET /api/resonance/all` - All resonances (filter by status)
 - `GET /api/resonance/mutual` - Mutual matches only
-
-### Numerology Engine (`matching/numerology.py`)
-
-**Life Path:** `R(day + month + year)` - Core identity
-**Day Number:** `R(day)` - Personal rhythm
-**Month Number:** `R(month)` - Emotional baseline
-**Soul Urge:** Sum of vowels in name - Desire axis
-**Expression:** Sum of all letters - Bond axis
-**Challenge:** `|month - day|` - Friction axis
-
-Master numbers preserved: 11, 22, 33
-
-### Zodiac Engine (`matching/zodiac.py`)
-
-12-year cycle (Chinese/Turkish zodiac):
-- Animals: Fare, Öküz, Kaplan, Tavşan, Ejderha, Yılan, At, Koyun, Maymun, Horoz, Köpek, Domuz
-- Elements: Water, Metal, Wood, Fire
-- 2020 = Year of Rat (base year)
-
-### Compatibility Engine (`matching/compatibility.py`)
-
-**5 Axes:**
-1. **Structure** (~45%): Life path + day + month compatibility
-2. **Dynamics**: Asymmetric power balance (A→B ≠ B→A)
-3. **Culture** (~20%): Zodiac compatibility
-4. **Affinity**: Placeholder for auxiliary factors
-5. **Time**: Cycle number alignment
-
-**Match Types:**
-- Twin Flame (85-100)
-- Magnetic Stability (75-84)
-- Passionate Tension (70-84)
-- Gentle Growth (50-69)
-- Karmic Lesson (30-49)
-- Incompatible (<30)
 
 ---
 
@@ -128,300 +168,65 @@ Master numbers preserved: 11, 22, 33
 
 **Location:** `/apps/prototype`
 **Stack:** React 18, Vite, TypeScript, Tailwind CSS 4
-**Styling:** Tailwind + custom CSS with mystical/esoteric theme
 
-### Component Structure
-
-```
-src/
-├── components/
-│   ├── App.tsx              # Main orchestrator (3 screens)
-│   ├── LoveEngine.tsx       # Circular visualization with sigils
-│   ├── ShaderCanvas.tsx     # WebGL shader rendering
-│   ├── Blueprint.tsx        # Results 2x2 grid
-│   ├── InputForm.tsx        # Name + DOB form
-│   ├── Background.tsx       # Gradient layers
-│   └── Particles.tsx        # Floating particles
-├── lib/
-│   ├── numerology.ts        # Client-side calculations
-│   └── shaders.ts           # GLSL shaders (5 variants)
-└── imports/
-    ├── NumerosIcon.tsx
-    └── NumerosText.tsx
-```
-
-### Screen Flow
-
-```
-idle → input → idle (calculation animation) → blueprint
-```
-
-### State Management
-
-Local React state with hooks (no Redux):
-```typescript
-interface EngineState {
-  isCalculating: boolean;
-  isIntense: boolean;
-  resultNumber: number | null;
-  showResult: boolean;
-  activeNumber: number | null;
-  currentPhase: number | null;
-  showSigils: { core, desire, bond, friction };
-}
-```
-
-### UI/UX Patterns
-
-- Dark mystical theme (#0c0a1d background)
-- Fonts: Cormorant Garamond (serif), JetBrains Mono
-- Phase-based reveal animations
-- Rotating number track with glow effects
-- WebGL shaders for visual effects
-- Sigils: Circle (core), Triangle (desire), Square (bond), Diamond (friction)
-
-### Key Animations
-- `floatParticle`: 10-20s floating
-- `rotateTrack`: 30s idle, 6s calculating, 2s intense
-- `corePulse` / `corePulseActive`: Pulsing
-- `fadeIn`, `tileAppear`: Entrance animations
+### Key Files
+- `src/components/App.tsx` - Main orchestrator
+- `src/components/LoveEngine.tsx` - Circular visualization
+- `src/components/Blueprint.tsx` - Results grid
+- `src/components/InputForm.tsx` - Name + DOB form
+- `src/lib/numerology.ts` - Client calculations
+- `src/lib/shaders.ts` - GLSL shaders
 
 ---
 
-## Native (React Native/Expo) - TARGET
+## Development Commands
 
-**Location:** `/apps/native`
-**Stack:** Expo 52, React Native 0.76, TypeScript
-**Animations:** react-native-reanimated 3.16
-**Graphics:** expo-gl, @shopify/react-native-skia
-
-### Current State
-
-Basic shell with:
-- Animated WebGL background (gradient shader)
-- StatusOrb component with breathing animation
-- Logo: "num**Eros**"
-- No navigation, no API integration
-
-### Files
-- `App.tsx` - Active main app
-- `App.first.tsx` - Astrology chart variant
-- `App.fullchart.tsx` - Full chart variant
-
-### Missing (to implement)
-- Navigation (React Navigation)
-- API client integration
-- State management (Zustand/Redux)
-- All screens from prototype
-- Authentication flow
-- Profile management
-- Matching/scanning
-- Resonance/likes system
-
----
-
-## Web (Next.js)
-
-**Location:** `/apps/web`
-**Stack:** Next.js 16.1, React 19, TypeScript, Tailwind 4
-**Status:** Fresh starter template, no features yet
-
----
-
-## Development Guidelines
-
-### Backend Commands
-```bash
-cd backend
-python manage.py runserver          # Start server (localhost:8000)
-python manage.py makemigrations     # Create migrations
-python manage.py migrate            # Apply migrations
-python manage.py createsuperuser    # Create admin user
-```
-
-### Native Commands
+### Native
 ```bash
 cd native
-npm start                          # Expo dev server
-npm run ios                        # iOS simulator
-npm run android                    # Android emulator
-npm run prebuild                   # Generate native dirs
+npm start          # Expo dev server
+npm run ios        # iOS simulator
+npm run android    # Android emulator
+npx tsc --noEmit   # TypeScript check
 ```
 
-### Prototype Commands
+### Prototype
 ```bash
 cd prototype
-npm run dev                        # Vite dev server (localhost:5173)
-npm run build                      # Production build
+npm run dev        # Vite dev server (localhost:5173)
 ```
 
-### API Base URLs
-- Backend: `http://localhost:8000/api/`
-- CORS enabled for: `localhost:3000`, `localhost:8081`
-
-### Auth Header
-```
-Authorization: Token <token_value>
+### Backend
+```bash
+cd backend
+python manage.py runserver  # localhost:8000
 ```
 
 ---
 
-## Conversion Strategy: Prototype → Native
+## Conversion Notes
 
-### Phase 1: Foundation
-1. Set up navigation (React Navigation)
-2. Create API client service
-3. Implement auth context/store
-4. Build base UI components
+### CSS → React Native Mapping
 
-### Phase 2: Screens
-1. **Idle/Home**: Logo + LoveEngine visualization
-2. **Input**: Name + DOB form
-3. **Blueprint**: Results display
-4. **Scan**: Match discovery
-5. **Profile**: User profile management
-6. **Resonance**: Likes/matches list
+| CSS Property | React Native |
+|--------------|--------------|
+| `transition: all 0.7s cubic-bezier(...)` | `withTiming(value, { duration: 700, easing: Easing.bezier(...) })` |
+| `opacity: 0` with conditional render | Always render, animate opacity to 0 |
+| `height: auto` expanding | Animate height/maxHeight with interpolate |
+| `box-shadow` | `shadowColor`, `shadowRadius`, `shadowOpacity` (iOS) or Skia BlurMask |
+| `background: radial-gradient(...)` | Skia RadialGradient |
+| `filter: blur(...)` | Skia BlurMask |
 
-### Phase 3: Features
-1. Authentication flow (register/login)
-2. Profile calculation & storage
-3. Match scanning integration
-4. Resonance system
-5. Push notifications (future)
+### Skia vs SVG
 
-### Component Mapping
+Prefer **Skia Canvas** for:
+- Complex gradients (multi-stop radial)
+- Blur/glow effects
+- Noise textures
+- Runtime shaders
 
-| Prototype | Native Equivalent |
-|-----------|-------------------|
-| `<div>` | `<View>` |
-| `<span>`, `<p>` | `<Text>` |
-| `<input>` | `<TextInput>` |
-| `<button>` | `<TouchableOpacity>` or `<Pressable>` |
-| Tailwind classes | StyleSheet or NativeWind |
-| WebGL shaders | expo-gl with GLSL |
-| CSS animations | react-native-reanimated |
-
-### Color Palette
-```typescript
-const colors = {
-  bgDeep: '#0c0a1d',
-  bgMid: '#1a1533',
-  textPrimary: 'rgba(255,255,255,0.95)',
-  textSecondary: 'rgba(255,255,255,0.7)',
-  textDim: 'rgba(255,255,255,0.5)',
-  accentPink: '#ff6b9d',
-  accentPurple: '#9d4edd',
-};
-```
-
----
-
-## Skills Reference
-
-### Skill: Create API Client
-```typescript
-// services/api.ts
-const API_BASE = 'http://localhost:8000/api';
-
-export const api = {
-  auth: {
-    register: (data) => fetch(`${API_BASE}/auth/register`, { method: 'POST', body: JSON.stringify(data) }),
-    login: (email, password) => fetch(`${API_BASE}/auth/login`, { method: 'POST', body: JSON.stringify({email, password}) }),
-    logout: (token) => fetch(`${API_BASE}/auth/logout`, { method: 'POST', headers: { Authorization: `Token ${token}` } }),
-  },
-  profile: {
-    me: (token) => fetch(`${API_BASE}/profile/me`, { headers: { Authorization: `Token ${token}` } }),
-    calculate: (data) => fetch(`${API_BASE}/profile/calculate`, { method: 'POST', body: JSON.stringify(data) }),
-  },
-  match: {
-    scan: (token, params) => fetch(`${API_BASE}/match/scan`, { method: 'POST', headers: { Authorization: `Token ${token}` }, body: JSON.stringify(params) }),
-  },
-  resonance: {
-    resonate: (token, targetUserId) => fetch(`${API_BASE}/resonance/resonate`, { method: 'POST', headers: { Authorization: `Token ${token}` }, body: JSON.stringify({ target_user_id: targetUserId }) }),
-    mutual: (token) => fetch(`${API_BASE}/resonance/mutual`, { headers: { Authorization: `Token ${token}` } }),
-  },
-};
-```
-
-### Skill: Auth Context Pattern
-```typescript
-// contexts/AuthContext.tsx
-interface AuthState {
-  token: string | null;
-  user: User | null;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthState>(null);
-
-export function AuthProvider({ children }) {
-  const [state, setState] = useState<AuthState>({ token: null, user: null, isLoading: true });
-
-  // Load token from SecureStore on mount
-  // Provide login/logout/register functions
-
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
-}
-```
-
-### Skill: Numerology Types
-```typescript
-interface NumerologyProfile {
-  lifePath: number;       // 1-9, 11, 22, 33
-  dayNumber: number;      // 1-9
-  monthNumber: number;    // 1-12
-  cycleNumber: number;    // Current year cycle
-  soulUrge: number | null;
-  expression: number | null;
-  challenge: number | null;
-}
-
-interface ZodiacProfile {
-  animal: string;
-  element: string;
-  position: number;       // 1-12
-}
-
-interface CompatibilityResult {
-  totalScore: number;     // 0-100
-  matchType: string;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-  axes: {
-    structure: number;
-    dynamics: number;
-    culture: number;
-    affinity: number;
-    time: number;
-  };
-  headline: string;
-  description: string;
-}
-```
-
----
-
-## File Quick Reference
-
-### Backend Key Files
-- `backend/numeros/settings.py` - Django config
-- `backend/numeros/urls.py` - Main URL routing
-- `backend/users/models.py` - User model
-- `backend/users/views.py` - Auth/profile endpoints
-- `backend/matching/compatibility.py` - 5-axis engine
-- `backend/matching/numerology.py` - Number calculations
-- `backend/matching/zodiac.py` - Zodiac calculations
-
-### Prototype Key Files
-- `prototype/src/App.tsx` - Main app (3 screens)
-- `prototype/src/components/LoveEngine.tsx` - Circular viz
-- `prototype/src/components/Blueprint.tsx` - Results grid
-- `prototype/src/lib/numerology.ts` - Client calculations
-- `prototype/src/lib/shaders.ts` - GLSL shaders
-
-### Native Key Files
-- `native/App.tsx` - Current main app
-- `native/index.js` - Entry point
-- `native/package.json` - Dependencies
+Use **react-native-svg** only for:
+- Simple static patterns (like blueprint grid)
 
 ---
 

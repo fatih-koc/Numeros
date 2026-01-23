@@ -424,12 +424,12 @@ const styles = StyleSheet.create({
   },
   number: {
     fontFamily: fonts.mono,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '300',
     color: colors.textDim,
   },
   numberActive: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '400',
     color: colors.textPrimary,
     textShadowColor: 'rgba(255, 255, 255, 0.6)',
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   resultNumber: {
-    fontSize: 60,
+    fontSize: 62,
     fontWeight: '300',
     color: colors.textPrimary,
     textShadowColor: 'rgba(139, 92, 246, 0.6)',

@@ -105,7 +105,8 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
+    fontWeight: '600',
     letterSpacing: 3,
     color: colors.textDim,
   },
@@ -126,8 +127,9 @@ const styles = StyleSheet.create({
   },
   searchButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textPrimary,
+    color: colors.textSecondary,
   },
 })

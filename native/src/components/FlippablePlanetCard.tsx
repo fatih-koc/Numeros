@@ -25,9 +25,9 @@ interface FlippablePlanetCardProps {
 }
 
 const SIZE_CONFIG = {
-  small: {height: 160, symbolSize: 24, padding: 16},
-  medium: {height: 180, symbolSize: 32, padding: 20},
-  large: {height: 220, symbolSize: 40, padding: 24},
+  small: {height: 185, symbolSize: 26, padding: 12},
+  medium: {height: 205, symbolSize: 34, padding: 14},
+  large: {height: 245, symbolSize: 42, padding: 16},
 }
 
 export function FlippablePlanetCard({
@@ -134,14 +134,10 @@ export function FlippablePlanetCard({
             <Text style={styles.backHeaderName}>{planetName}</Text>
           </View>
           <Text style={styles.backMeaning}>{planetMeaning}</Text>
-          <View style={styles.backSignRow}>
-            {signSymbol && (
-              <Text style={[styles.backSignSymbol, {color: planetColor}]}>{signSymbol}</Text>
-            )}
-            <Text style={styles.backSignMeaning}>
-              in {planet.sign}: {signMeaning}
-            </Text>
-          </View>
+          <Text style={styles.backSignMeaning}>
+            {signSymbol && <Text style={[styles.backSignSymbol, {color: planetColor}]}>{signSymbol} </Text>}
+            in {planet.sign}: {signMeaning}
+          </Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -173,9 +169,12 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   backContent: {
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
+    paddingHorizontal: 4,
   },
   symbol: {
     fontFamily: fonts.symbols,
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
   },
   planetName: {
     fontFamily: fonts.mono,
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: 3,
     color: colors.textDim,
     marginBottom: 8,
@@ -198,30 +197,30 @@ const styles = StyleSheet.create({
   },
   signSymbol: {
     fontFamily: fonts.symbols,
-    fontSize: 14,
+    fontSize: 16,
   },
   sign: {
-    fontSize: 16,
+    fontSize: 18,
     color: colors.textSecondary,
     fontWeight: '500',
     fontFamily: fonts.serif,
   },
   degree: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.textDim,
   },
   house: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
     color: colors.textDim,
     marginTop: 4,
   },
   backHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 10,
   },
   backHeaderSymbol: {
     fontFamily: fonts.symbols,
@@ -229,34 +228,27 @@ const styles = StyleSheet.create({
   },
   backHeaderName: {
     fontFamily: fonts.mono,
-    fontSize: 9,
+    fontSize: 10,
     color: colors.textDim,
-    letterSpacing: 3,
+    letterSpacing: 2,
   },
   backMeaning: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 21,
-    marginBottom: 12,
+    lineHeight: 18,
+    marginBottom: 10,
     textAlign: 'center',
     fontFamily: fonts.serif,
-  },
-  backSignRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
   },
   backSignSymbol: {
     fontFamily: fonts.symbols,
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: 13,
   },
   backSignMeaning: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textDim,
-    lineHeight: 18,
+    lineHeight: 16,
     textAlign: 'center',
     fontFamily: fonts.serif,
-    flex: 1,
   },
 })

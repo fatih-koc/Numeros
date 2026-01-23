@@ -162,24 +162,22 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     alignItems: 'center',
-    minHeight: 80,
+    gap: 12,
   },
   statusLabel: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 4,
     color: colors.textDim,
-    marginBottom: 8,
   },
   statusText: {
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: '400',
     color: colors.textSecondary,
-    marginBottom: 4,
     fontFamily: fonts.serif,
   },
   subStatus: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textDim,
     fontFamily: fonts.serifItalic,
   },
@@ -194,8 +192,9 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textPrimary,
+    color: colors.textSecondary,
   },
 })

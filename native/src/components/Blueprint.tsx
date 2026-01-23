@@ -284,7 +284,7 @@ function Tile({tileKey, index, title, number, meaning, gridWidth, expandedKey, o
           <Animated.View style={[styles.face, styles.frontFace, frontFaceStyle]}>
             <View style={styles.frontContent}>
               {/* Title */}
-              <Text style={styles.frontLabel}>{title}</Text>
+              <Text style={styles.frontLabel} numberOfLines={1}>{title}</Text>
 
               {/* Number */}
               <Text
@@ -296,7 +296,7 @@ function Tile({tileKey, index, title, number, meaning, gridWidth, expandedKey, o
               </Text>
 
               {/* Meaning */}
-              <Text style={styles.frontMeaning}>{meaning}</Text>
+              <Text style={styles.frontMeaning} numberOfLines={2}>{meaning}</Text>
 
               {/* Click hint */}
               <Text style={styles.clickHint}>Tap to reveal</Text>
@@ -331,7 +331,8 @@ function Tile({tileKey, index, title, number, meaning, gridWidth, expandedKey, o
             <View style={styles.backContent}>
               {/* Title */}
               <Animated.Text
-                style={[styles.backLabel, {color: tileColors.color}, shimmerTitleStyle]}>
+                style={[styles.backLabel, {color: tileColors.color}, shimmerTitleStyle]}
+                numberOfLines={1}>
                 {title}
               </Animated.Text>
 
@@ -533,17 +534,20 @@ const styles = StyleSheet.create({
   },
   frontContent: {
     flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
   },
   frontLabel: {
     fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 4,
+    fontSize: 11,
+    letterSpacing: 3,
     color: colors.textDim,
     textTransform: 'uppercase',
-    marginBottom: 16,
+    textAlign: 'center',
+    marginBottom: 12,
   },
   frontNumber: {
     fontSize: 48,
@@ -551,22 +555,23 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 30,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   frontMeaning: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 19,
+    lineHeight: 18,
     fontFamily: fonts.serif,
-    maxWidth: '90%',
   },
   clickHint: {
+    position: 'absolute',
+    bottom: 16,
     fontFamily: fonts.mono,
-    fontSize: 9,
+    fontSize: 10,
     letterSpacing: 2,
     color: colors.textDim,
-    marginTop: 16,
+    textAlign: 'center',
     opacity: 0.5,
   },
   backFace: {
@@ -583,20 +588,22 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
-    letterSpacing: 4,
+    fontSize: 13,
+    letterSpacing: 3,
     textTransform: 'uppercase',
+    textAlign: 'center',
     marginBottom: 8,
   },
   backSubtitle: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 2,
     color: colors.textDim,
+    textAlign: 'center',
     marginBottom: 24,
   },
   backNumber: {
-    fontSize: 80,
+    fontSize: 82,
     fontWeight: '300',
     fontFamily: fonts.serif,
     textShadowOffset: {width: 0, height: 0},
@@ -605,7 +612,7 @@ const styles = StyleSheet.create({
     lineHeight: 80,
   },
   backMeaning: {
-    fontSize: 16,
+    fontSize: 18,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -624,7 +631,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   detailsText: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
     lineHeight: 24,
     fontStyle: 'italic',
@@ -632,7 +639,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   resonanceText: {
-    fontSize: 13,
+    fontSize: 15,
     lineHeight: 20,
     fontFamily: fonts.serif,
     textAlign: 'center',
@@ -654,7 +661,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 18,
+    fontSize: 20,
   },
   button: {
     backgroundColor: 'rgba(139, 92, 246, 0.15)',
@@ -670,8 +677,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textPrimary,
+    color: colors.textSecondary,
   },
 })

@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.textDim,
   },
   stepNumberActive: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 2,
     color: colors.textDim,
   },
@@ -489,24 +489,26 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textDim,
+    color: colors.textSecondary,
   },
   labelOptional: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 10,
+    fontWeight: '400',
     color: colors.textDim,
     opacity: 0.5,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 16,
-    fontSize: 17,
+    fontSize: 19,
     color: colors.textPrimary,
     fontFamily: fonts.serif,
     shadowColor: '#8B5CF6',
@@ -515,7 +517,7 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
   },
   inputText: {
-    fontSize: 17,
+    fontSize: 19,
     color: colors.textPrimary,
     fontFamily: fonts.serif,
   },
@@ -530,8 +532,9 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    color: 'rgba(236, 72, 153, 0.8)',
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(236, 72, 153, 0.6)',
     letterSpacing: 1,
   },
   buttonRow: {
@@ -562,9 +565,10 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textPrimary,
+    color: colors.textSecondary,
   },
   backButton: {
     flex: 1,
@@ -577,8 +581,9 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 13,
+    fontWeight: '600',
     letterSpacing: 3,
-    color: colors.textSecondary,
+    color: colors.textDim,
   },
 })

@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 14,
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     letterSpacing: 3,
     color: colors.textDim,
     textAlign: 'center',
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
   },
   completeText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#10B981',
     fontStyle: 'italic',
     textAlign: 'center',

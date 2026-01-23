@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textDim,
   },
   stepNumberActive: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     letterSpacing: 2,
     color: colors.textDim,
   },
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     letterSpacing: 3,
     color: colors.textSecondary,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 16,
-    fontSize: 19,
+    fontSize: 17,
     color: colors.textPrimary,
     fontFamily: fonts.serif,
     shadowColor: '#8B5CF6',
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
   },
   inputText: {
-    fontSize: 19,
+    fontSize: 17,
     color: colors.textPrimary,
     fontFamily: fonts.serif,
   },
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: 'rgba(236, 72, 153, 0.6)',
     letterSpacing: 1,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     letterSpacing: 3,
     color: colors.textSecondary,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
     letterSpacing: 3,
     color: colors.textDim,

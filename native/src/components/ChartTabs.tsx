@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {StyleSheet, View, Text, Pressable} from 'react-native'
+import {StyleSheet, View, Text, Pressable, Alert} from 'react-native'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import type {ScanOutput} from '../lib/scanOutput'
 import {Blueprint} from './Blueprint'
@@ -11,10 +11,22 @@ interface ChartTabsProps {
   scanData: ScanOutput
   onSearch: () => void
   onUpgrade?: () => void
+  onShare?: () => void
 }
 
-export function ChartTabs({scanData, onSearch, onUpgrade}: ChartTabsProps) {
+export function ChartTabs({scanData, onSearch, onUpgrade, onShare}: ChartTabsProps) {
   const [activeTab, setActiveTab] = useState<'numbers' | 'stars'>('numbers')
+
+  const handleShare = () => {
+    if (onShare) {
+      onShare()
+    } else {
+      Alert.alert(
+        'Share',
+        'Share functionality would allow you to share your cosmic blueprint with others.'
+      )
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -31,7 +43,7 @@ export function ChartTabs({scanData, onSearch, onUpgrade}: ChartTabsProps) {
               styles.tabButtonText,
               activeTab === 'numbers' && styles.tabButtonTextActive,
             ]}>
-            YOUR NUMBERS
+            Your Numbers
           </Text>
         </Pressable>
 
@@ -46,7 +58,7 @@ export function ChartTabs({scanData, onSearch, onUpgrade}: ChartTabsProps) {
               styles.tabButtonText,
               activeTab === 'stars' && styles.tabButtonTextActive,
             ]}>
-            YOUR STARS
+            Your Stars
           </Text>
         </Pressable>
       </View>
@@ -55,7 +67,7 @@ export function ChartTabs({scanData, onSearch, onUpgrade}: ChartTabsProps) {
       <View style={styles.tabContent}>
         {activeTab === 'numbers' && (
           <Animated.View key="numbers" entering={FadeIn.duration(800)}>
-            <Blueprint data={scanData} onSearch={onSearch} />
+            <Blueprint data={scanData} />
           </Animated.View>
         )}
 
@@ -66,12 +78,28 @@ export function ChartTabs({scanData, onSearch, onUpgrade}: ChartTabsProps) {
         )}
       </View>
 
-      {/* Search for Resonance Button (only on Stars tab) */}
-      {activeTab === 'stars' && (
-        <Pressable style={styles.searchButton} onPress={onSearch}>
-          <Text style={styles.searchButtonText}>SEARCH FOR RESONANCE</Text>
+      {/* Unified Bottom Actions - visible on both tabs */}
+      <View style={styles.bottomActions}>
+        <Pressable
+          style={({pressed}) => [
+            styles.actionButton,
+            styles.shareButton,
+            pressed && styles.actionButtonPressed,
+          ]}
+          onPress={handleShare}>
+          <Text style={styles.actionButtonText}>Share</Text>
         </Pressable>
-      )}
+
+        <Pressable
+          style={({pressed}) => [
+            styles.actionButton,
+            styles.resonanceButton,
+            pressed && styles.actionButtonPressed,
+          ]}
+          onPress={onSearch}>
+          <Text style={styles.actionButtonText}>Resonance</Text>
+        </Pressable>
+      </View>
     </View>
   )
 }
@@ -105,10 +133,10 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
     letterSpacing: 3,
     color: colors.textDim,
+    textTransform: 'uppercase',
   },
   tabButtonTextActive: {
     color: colors.textPrimary,
@@ -116,20 +144,34 @@ const styles = StyleSheet.create({
   tabContent: {
     width: '100%',
   },
-  searchButton: {
+  bottomActions: {
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 40,
+    justifyContent: 'center',
+  },
+  actionButton: {
     paddingHorizontal: 48,
     paddingVertical: 16,
     borderRadius: 50,
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
-  searchButtonText: {
+  actionButtonPressed: {
+    transform: [{translateY: 0}, {scale: 0.98}],
+  },
+  shareButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  resonanceButton: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+  },
+  actionButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
     letterSpacing: 3,
-    color: colors.textSecondary,
+    color: colors.textPrimary,
+    textTransform: 'uppercase',
   },
 })

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React from 'react'
 import {StyleSheet, View, Text} from 'react-native'
 import {
   Canvas,
@@ -17,8 +17,10 @@ import Animated, {
   withTiming,
   withSequence,
   Easing,
-  cancelAnimation,
   useDerivedValue,
+  SharedValue,
+  interpolate,
+  Extrapolation,
 } from 'react-native-reanimated'
 import {ShaderCanvas} from './ShaderCanvas'
 import {colors, sigilColors} from '../lib/colors'
@@ -26,17 +28,13 @@ import {fonts} from '../lib/fonts'
 
 interface LoveEngineProps {
   isCalculating: boolean
-  isIntense: boolean
   resultNumber: number | null
-  showResult: boolean
-  activeNumber: number | null
-  currentPhase: number | null
-  showSigils: {
-    life_path: boolean
-    soul_urge: boolean
-    expression: boolean
-    personality: boolean
-  }
+  // Shared values from EngineContext
+  currentPhase: SharedValue<number>
+  intensity: SharedValue<number>
+  extractionProgress: SharedValue<number>
+  resultOpacity: SharedValue<number>
+  resultScale: SharedValue<number>
 }
 
 const TRACK_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -79,53 +77,48 @@ const createDiamondPath = (size: number, scale: number = 1) => {
 
 export function LoveEngine({
   isCalculating,
-  isIntense,
   resultNumber,
-  showResult,
-  activeNumber,
   currentPhase,
-  showSigils,
+  intensity,
+  extractionProgress,
+  resultOpacity,
+  resultScale,
 }: LoveEngineProps) {
-  // Animation values
-  const rotation = useSharedValue(0)
+  // Internal animation values for continuous effects
+  const idleRotation = useSharedValue(0)
   const coreScale = useSharedValue(1)
   const coreOpacity = useSharedValue(0.8)
-  const resultScale = useSharedValue(0.5)
-  const resultOpacity = useSharedValue(0)
 
-  // Sigil animation values
-  const sigilLifePathOpacity = useSharedValue(0)
-  const sigilSoulUrgeOpacity = useSharedValue(0)
-  const sigilExpressionOpacity = useSharedValue(0)
-  const sigilPersonalityOpacity = useSharedValue(0)
+  // Derive rotation speed from extraction state
+  // Idle: 30s, Calculating: 6s, Intense: 2s
+  const rotationDuration = useDerivedValue(() => {
+    if (intensity.value > 0.5) return 2000
+    if (extractionProgress.value > 0) return 6000
+    return 30000
+  })
 
-  // Map phase to shader ID
-  const getShaderForPhase = (): number => {
-    if (currentPhase !== null && isCalculating) {
-      return currentPhase + 1
-    }
-    return 2 // Default to Ether
-  }
-
-  // Track rotation animation
-  useEffect(() => {
-    cancelAnimation(rotation)
-    const duration = isIntense ? 2000 : isCalculating ? 6000 : 30000
-
-    rotation.value = withRepeat(
-      withTiming(360, {duration, easing: Easing.linear}),
+  // Start idle rotation on mount
+  React.useEffect(() => {
+    idleRotation.value = withRepeat(
+      withTiming(360, {duration: 30000, easing: Easing.linear}),
       -1,
       false,
     )
-  }, [isCalculating, isIntense, rotation])
+  }, [idleRotation])
 
-  // Core pulse animation
-  useEffect(() => {
-    cancelAnimation(coreScale)
-    cancelAnimation(coreOpacity)
+  // Derive actual rotation from progress and idle rotation
+  const rotation = useDerivedValue(() => {
+    // When extracting, add extra rotation based on progress
+    const extraRotation = extractionProgress.value * 360 * 2
+    // During intense phase, even faster
+    const intenseRotation = intensity.value * 360
+    return (idleRotation.value + extraRotation + intenseRotation) % 360
+  })
 
-    const scaleTo = isCalculating ? 1.1 : 1.05
+  // Core pulse - faster when calculating
+  React.useEffect(() => {
     const duration = isCalculating ? 1000 : 2000
+    const scaleTo = isCalculating ? 1.1 : 1.05
 
     coreScale.value = withRepeat(
       withSequence(
@@ -158,48 +151,61 @@ export function LoveEngine({
     )
   }, [isCalculating, coreScale, coreOpacity])
 
-  // Sigil animations
-  useEffect(() => {
-    sigilLifePathOpacity.value = withTiming(showSigils.life_path ? 1 : 0, {
-      duration: 800,
-      easing: Easing.inOut(Easing.cubic),
-    })
-  }, [showSigils.life_path, sigilLifePathOpacity])
+  // Derive active number from current phase
+  const activeNumber = useDerivedValue(() => {
+    return currentPhase.value >= 0 ? Math.floor(currentPhase.value) : null
+  })
 
-  useEffect(() => {
-    sigilSoulUrgeOpacity.value = withTiming(showSigils.soul_urge ? 1 : 0, {
-      duration: 800,
-      easing: Easing.inOut(Easing.cubic),
-    })
-  }, [showSigils.soul_urge, sigilSoulUrgeOpacity])
+  // Sigil opacities derived from current phase
+  const sigilLifePathOpacity = useDerivedValue(() => {
+    // Show during phase 0
+    if (currentPhase.value < 0) return 0
+    return interpolate(
+      currentPhase.value,
+      [-0.5, 0, 0.5, 1],
+      [0, 1, 1, 0],
+      Extrapolation.CLAMP,
+    )
+  })
 
-  useEffect(() => {
-    sigilExpressionOpacity.value = withTiming(showSigils.expression ? 1 : 0, {
-      duration: 800,
-      easing: Easing.inOut(Easing.cubic),
-    })
-  }, [showSigils.expression, sigilExpressionOpacity])
+  const sigilSoulUrgeOpacity = useDerivedValue(() => {
+    // Show during phase 1
+    if (currentPhase.value < 0.5) return 0
+    return interpolate(
+      currentPhase.value,
+      [0.5, 1, 1.5, 2],
+      [0, 1, 1, 0],
+      Extrapolation.CLAMP,
+    )
+  })
 
-  useEffect(() => {
-    sigilPersonalityOpacity.value = withTiming(showSigils.personality ? 1 : 0, {
-      duration: 800,
-      easing: Easing.inOut(Easing.cubic),
-    })
-  }, [showSigils.personality, sigilPersonalityOpacity])
+  const sigilExpressionOpacity = useDerivedValue(() => {
+    // Show during phase 2
+    if (currentPhase.value < 1.5) return 0
+    return interpolate(
+      currentPhase.value,
+      [1.5, 2, 2.5, 3],
+      [0, 1, 1, 0],
+      Extrapolation.CLAMP,
+    )
+  })
 
-  // Result number animation
-  useEffect(() => {
-    if (showResult) {
-      resultScale.value = withTiming(1, {
-        duration: 500,
-        easing: Easing.out(Easing.back(1.5)),
-      })
-      resultOpacity.value = withTiming(1, {duration: 400})
-    } else {
-      resultScale.value = withTiming(0.5, {duration: 300})
-      resultOpacity.value = withTiming(0, {duration: 300})
-    }
-  }, [showResult, resultScale, resultOpacity])
+  const sigilPersonalityOpacity = useDerivedValue(() => {
+    // Show during phase 3
+    if (currentPhase.value < 2.5) return 0
+    return interpolate(
+      currentPhase.value,
+      [2.5, 3, 3.5, 4],
+      [0, 1, 1, 0],
+      Extrapolation.CLAMP,
+    )
+  })
+
+  // Shader ID derived from current phase
+  const shaderId = useDerivedValue(() => {
+    if (currentPhase.value < 0) return 2 // Default ether
+    return Math.floor(currentPhase.value) + 1
+  })
 
   // Animated styles
   const trackStyle = useAnimatedStyle(() => ({
@@ -232,10 +238,25 @@ export function LoveEngine({
   // Counter-rotation for numbers to keep them upright
   const NumberItem = ({num, index}: {num: number; index: number}) => {
     const pos = getNumberPosition(index)
-    const isActive = activeNumber === index
 
     const counterStyle = useAnimatedStyle(() => ({
       transform: [{rotate: `${-rotation.value}deg`}],
+    }))
+
+    // Use opacity to switch between inactive and active text
+    const inactiveOpacity = useDerivedValue(() =>
+      activeNumber.value === index ? 0 : 1
+    )
+    const activeOpacityValue = useDerivedValue(() =>
+      activeNumber.value === index ? 1 : 0
+    )
+
+    const inactiveStyle = useAnimatedStyle(() => ({
+      opacity: inactiveOpacity.value,
+    }))
+
+    const activeStyle = useAnimatedStyle(() => ({
+      opacity: activeOpacityValue.value,
     }))
 
     return (
@@ -248,18 +269,17 @@ export function LoveEngine({
           },
           counterStyle,
         ]}>
-        <Text style={[styles.number, isActive && styles.numberActive]}>
+        {/* Inactive number */}
+        <Animated.Text style={[styles.number, styles.numberInactive, inactiveStyle]}>
           {num}
-        </Text>
+        </Animated.Text>
+        {/* Active number with glow (positioned absolutely on top) */}
+        <Animated.Text style={[styles.number, styles.numberActive, activeStyle]}>
+          {num}
+        </Animated.Text>
       </Animated.View>
     )
   }
-
-  // Skia sigil opacity values
-  const lifePathOp = useDerivedValue(() => sigilLifePathOpacity.value)
-  const soulUrgeOp = useDerivedValue(() => sigilSoulUrgeOpacity.value)
-  const expressionOp = useDerivedValue(() => sigilExpressionOpacity.value)
-  const personalityOp = useDerivedValue(() => sigilPersonalityOpacity.value)
 
   // Skia paths
   const trianglePath = createTrianglePath(60)
@@ -272,7 +292,7 @@ export function LoveEngine({
       <View style={styles.shaderWrapper}>
         <ShaderCanvas
           size={ENGINE_SIZE}
-          shaderId={getShaderForPhase()}
+          shaderId={shaderId}
           isCalculating={isCalculating}
         />
       </View>
@@ -302,7 +322,7 @@ export function LoveEngine({
         </Circle>
 
         {/* Life Path Sigil - Circle with glow */}
-        <Group opacity={lifePathOp}>
+        <Group opacity={sigilLifePathOpacity}>
           {/* Outer glow */}
           <Circle
             cx={ENGINE_SIZE / 2}
@@ -325,7 +345,7 @@ export function LoveEngine({
         </Group>
 
         {/* Soul Urge Sigil - Triangle with glow */}
-        <Group opacity={soulUrgeOp}>
+        <Group opacity={sigilSoulUrgeOpacity}>
           {/* Outer glow */}
           <Path
             path={trianglePath}
@@ -344,7 +364,7 @@ export function LoveEngine({
         </Group>
 
         {/* Expression Sigil - Diamond with glow */}
-        <Group opacity={expressionOp}>
+        <Group opacity={sigilExpressionOpacity}>
           {/* Outer glow */}
           <Path
             path={expressionDiamondPath}
@@ -363,7 +383,7 @@ export function LoveEngine({
         </Group>
 
         {/* Personality Sigil - Smaller Diamond with glow */}
-        <Group opacity={personalityOp}>
+        <Group opacity={sigilPersonalityOpacity}>
           {/* Outer glow */}
           <Path
             path={personalityDiamondPath}
@@ -424,12 +444,15 @@ const styles = StyleSheet.create({
   },
   number: {
     fontFamily: fonts.mono,
-    fontSize: 22,
+    position: 'absolute',
+  },
+  numberInactive: {
+    fontSize: 24,
     fontWeight: '300',
     color: colors.textDim,
   },
   numberActive: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '400',
     color: colors.textPrimary,
     textShadowColor: 'rgba(255, 255, 255, 0.6)',

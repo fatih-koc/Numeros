@@ -5,9 +5,7 @@ import {
   Skia,
   Shader,
   Fill,
-  Circle,
   Group,
-  BlurMask,
 } from '@shopify/react-native-skia'
 import {
   useSharedValue,
@@ -15,11 +13,12 @@ import {
   withRepeat,
   withTiming,
   Easing,
+  SharedValue,
 } from 'react-native-reanimated'
 
 interface ShaderCanvasProps {
   size: number
-  shaderId?: number
+  shaderId?: SharedValue<number> | number
   isCalculating?: boolean
 }
 
@@ -267,21 +266,22 @@ half4 main(float2 fragCoord) {
 }
 `)!
 
-// Map shader ID to Skia RuntimeEffect
-const shaderSources: Record<number, typeof etherSource> = {
-  1: flowingWavesSource,
-  2: etherSource,
-  3: shootingStarsSource,
-  4: wavyLinesSource,
-  5: plasmaEnergySource,
-}
-
 export function ShaderCanvas({
   size,
-  shaderId = 2,
+  shaderId: shaderIdProp,
   isCalculating = false,
 }: ShaderCanvasProps) {
   const time = useSharedValue(0)
+
+  // Normalize shaderId to always be a SharedValue
+  const internalShaderId = useSharedValue(2)
+
+  // If shaderId is a number, update internal value
+  useEffect(() => {
+    if (typeof shaderIdProp === 'number') {
+      internalShaderId.value = shaderIdProp
+    }
+  }, [shaderIdProp, internalShaderId])
 
   // Animate time continuously
   useEffect(() => {
@@ -293,7 +293,15 @@ export function ShaderCanvas({
     )
   }, [time])
 
-  // Create uniforms for the shader
+  // Get shader ID value (from prop SharedValue or internal)
+  const currentShaderId = useDerivedValue(() => {
+    if (shaderIdProp && typeof shaderIdProp === 'object' && 'value' in shaderIdProp) {
+      return shaderIdProp.value
+    }
+    return internalShaderId.value
+  }, [shaderIdProp])
+
+  // Create uniforms for the shader - includes shader selection
   const uniforms = useDerivedValue(() => {
     return {
       iResolution: [size, size],
@@ -301,15 +309,49 @@ export function ShaderCanvas({
     }
   }, [size, time])
 
-  const source = shaderSources[shaderId] || etherSource
+  // For now, we need to render all shaders and control visibility
+  // because Skia doesn't support dynamic shader switching within useDerivedValue
+  // The shader selection happens based on the currentShaderId
+  const shaderOpacity1 = useDerivedValue(() => currentShaderId.value === 1 ? 1 : 0)
+  const shaderOpacity2 = useDerivedValue(() => currentShaderId.value === 2 || currentShaderId.value < 1 ? 1 : 0)
+  const shaderOpacity3 = useDerivedValue(() => currentShaderId.value === 3 ? 1 : 0)
+  const shaderOpacity4 = useDerivedValue(() => currentShaderId.value === 4 ? 1 : 0)
+  const shaderOpacity5 = useDerivedValue(() => currentShaderId.value >= 5 ? 1 : 0)
 
   return (
     <View style={[styles.container, {width: size, height: size}]}>
       <Canvas style={{width: size, height: size}}>
         <Group clip={{x: 0, y: 0, width: size, height: size}}>
-          <Fill>
-            <Shader source={source} uniforms={uniforms} />
-          </Fill>
+          {/* Shader 1: Flowing Waves */}
+          <Group opacity={shaderOpacity1}>
+            <Fill>
+              <Shader source={flowingWavesSource} uniforms={uniforms} />
+            </Fill>
+          </Group>
+          {/* Shader 2: Ether (default) */}
+          <Group opacity={shaderOpacity2}>
+            <Fill>
+              <Shader source={etherSource} uniforms={uniforms} />
+            </Fill>
+          </Group>
+          {/* Shader 3: Shooting Stars */}
+          <Group opacity={shaderOpacity3}>
+            <Fill>
+              <Shader source={shootingStarsSource} uniforms={uniforms} />
+            </Fill>
+          </Group>
+          {/* Shader 4: Wavy Lines */}
+          <Group opacity={shaderOpacity4}>
+            <Fill>
+              <Shader source={wavyLinesSource} uniforms={uniforms} />
+            </Fill>
+          </Group>
+          {/* Shader 5: Plasma Energy */}
+          <Group opacity={shaderOpacity5}>
+            <Fill>
+              <Shader source={plasmaEnergySource} uniforms={uniforms} />
+            </Fill>
+          </Group>
         </Group>
       </Canvas>
     </View>

@@ -1,46 +1,53 @@
 import React, {createContext, useContext, useState, useCallback, useRef, ReactNode} from 'react'
+import {
+  useSharedValue,
+  withTiming,
+  withDelay,
+  withSequence,
+  Easing,
+  runOnJS,
+  cancelAnimation,
+  SharedValue,
+} from 'react-native-reanimated'
 import {generateScan} from '../lib/generateScan'
 import type {UserInput} from '../lib/scanOutput'
 import {useNumerology} from './NumerologyContext'
 
 export interface EngineState {
   isCalculating: boolean
-  isIntense: boolean
   resultNumber: number | null
   showResult: boolean
-  activeNumber: number | null
-  currentPhase: number | null
-  showSigils: {
-    life_path: boolean
-    soul_urge: boolean
-    expression: boolean
-    personality: boolean
-  }
+}
+
+// Shared values exposed by context for UI-thread animations
+export interface EngineAnimationValues {
+  extractionProgress: SharedValue<number>
+  currentPhase: SharedValue<number>
+  intensity: SharedValue<number>
+  resultOpacity: SharedValue<number>
+  resultScale: SharedValue<number>
 }
 
 interface EngineContextValue {
   engineState: EngineState
+  animationValues: EngineAnimationValues
   statusText: string
   subStatus: string
   extractionParams: UserInput | null
   setExtractionParams: (params: UserInput | null) => void
   startExtraction: (onComplete: () => void) => void
   resetEngine: () => void
+  idleButtonEnabled: boolean
+  enableIdleButton: () => void
+  disableIdleButton: () => void
+  setStatusText: (text: string) => void
+  setSubStatus: (text: string) => void
 }
 
 const initialEngineState: EngineState = {
   isCalculating: false,
-  isIntense: false,
   resultNumber: null,
   showResult: false,
-  activeNumber: null,
-  currentPhase: null,
-  showSigils: {
-    life_path: false,
-    soul_urge: false,
-    expression: false,
-    personality: false,
-  },
 }
 
 const EngineContext = createContext<EngineContextValue | null>(null)
@@ -49,102 +56,207 @@ interface EngineProviderProps {
   children: ReactNode
 }
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+// Phase configuration
+const PHASE_DURATION = 2000
+const INTENSIFY_DURATION = 1500
+const RESULT_DURATION = 1500
+const TOTAL_PHASES = 5
 
 export function EngineProvider({children}: EngineProviderProps) {
   const [engineState, setEngineState] = useState<EngineState>(initialEngineState)
   const [statusText, setStatusText] = useState('numEros is idle')
   const [subStatus, setSubStatus] = useState('Your love field is unaligned')
   const [extractionParams, setExtractionParams] = useState<UserInput | null>(null)
+  const [idleButtonEnabled, setIdleButtonEnabled] = useState(false)
   const {setScanOutput} = useNumerology()
   const isRunningRef = useRef(false)
 
-  const startExtraction = useCallback(
-    async (onComplete: () => void) => {
-      if (!extractionParams || isRunningRef.current) return
-      isRunningRef.current = true
+  // Shared values for UI-thread animations
+  const extractionProgress = useSharedValue(0)
+  const currentPhase = useSharedValue(-1)
+  const intensity = useSharedValue(0)
+  const resultOpacity = useSharedValue(0)
+  const resultScale = useSharedValue(0.5)
 
-      const phases = [
-        {text: 'Extracting Life Path...', duration: 2000, sigil: 'life_path' as const},
-        {text: 'Decoding Soul Urge...', duration: 2000, sigil: 'soul_urge' as const},
-        {text: 'Mapping Expression...', duration: 2000, sigil: 'expression' as const},
-        {text: 'Calculating Personality...', duration: 2000, sigil: 'personality' as const},
-        {text: 'Assembling Love Blueprint...', duration: 2000, sigil: null},
-      ]
+  const enableIdleButton = useCallback(() => setIdleButtonEnabled(true), [])
+  const disableIdleButton = useCallback(() => setIdleButtonEnabled(false), [])
 
-      setEngineState(prev => ({
-        ...prev,
-        isCalculating: true,
-        showSigils: {life_path: false, soul_urge: false, expression: false, personality: false},
-      }))
-      setSubStatus('Reading your signature')
+  // Callbacks for runOnJS during animation
+  const handlePhaseChange = useCallback((phase: number) => {
+    const phaseTexts = [
+      'Extracting Life Path...',
+      'Decoding Soul Urge...',
+      'Mapping Expression...',
+      'Calculating Personality...',
+      'Assembling Love Blueprint...',
+    ]
+    if (phase >= 0 && phase < phaseTexts.length) {
+      setStatusText(phaseTexts[phase])
+    }
+  }, [])
 
-      for (let i = 0; i < phases.length; i++) {
-        const phase = phases[i]
-        setStatusText(phase.text)
+  const handleExtractionComplete = useCallback(
+    (onComplete: () => void) => {
+      if (!extractionParams) return
 
-        // Reset all sigils, then show only the current one
-        setEngineState(prev => ({
-          ...prev,
-          showSigils: {
-            life_path: phase.sigil === 'life_path',
-            soul_urge: phase.sigil === 'soul_urge',
-            expression: phase.sigil === 'expression',
-            personality: phase.sigil === 'personality',
-          },
-          activeNumber: i,
-          currentPhase: i,
-        }))
-
-        await sleep(phase.duration)
-      }
-
-      // Intensify for final calculation
-      setEngineState(prev => ({...prev, isIntense: true}))
-      await sleep(1500)
-
-      // Generate unified scan output
+      // Generate scan output
       const scan = generateScan(extractionParams)
       setScanOutput(scan)
 
-      // Show result number briefly
+      // Update state for result display
       setEngineState(prev => ({
         ...prev,
         resultNumber: scan.numerology.life_path,
         showResult: true,
       }))
-      await sleep(1500)
 
-      // Reset and transition
-      setEngineState(initialEngineState)
-      setStatusText('numEros is idle')
-      setSubStatus('Your love field is unaligned')
-      setExtractionParams(null)
-      isRunningRef.current = false
+      // Show result animation
+      resultScale.value = withTiming(1, {
+        duration: 500,
+        easing: Easing.out(Easing.back(1.5)),
+      })
+      resultOpacity.value = withTiming(1, {duration: 400})
 
-      onComplete()
+      // After result display, trigger navigation
+      setTimeout(() => {
+        setExtractionParams(null)
+        isRunningRef.current = false
+        onComplete()
+      }, RESULT_DURATION)
     },
-    [extractionParams, setScanOutput],
+    [extractionParams, setScanOutput, resultScale, resultOpacity],
+  )
+
+  const startExtraction = useCallback(
+    (onComplete: () => void) => {
+      if (!extractionParams || isRunningRef.current) return
+      isRunningRef.current = true
+
+      // Mark as calculating
+      setEngineState(prev => ({...prev, isCalculating: true, showResult: false}))
+      setSubStatus('Reading your signature')
+
+      // Reset animation values
+      extractionProgress.value = 0
+      currentPhase.value = -1
+      intensity.value = 0
+      resultOpacity.value = 0
+      resultScale.value = 0.5
+
+      // Start phase sequence on UI thread
+      // Each phase triggers a callback to update status text
+      currentPhase.value = withSequence(
+        // Phase 0: Life Path
+        withTiming(0, {duration: 0}, finished => {
+          if (finished) runOnJS(handlePhaseChange)(0)
+        }),
+        // Phase 1: Soul Urge
+        withDelay(
+          PHASE_DURATION,
+          withTiming(1, {duration: 0}, finished => {
+            if (finished) runOnJS(handlePhaseChange)(1)
+          }),
+        ),
+        // Phase 2: Expression
+        withDelay(
+          PHASE_DURATION,
+          withTiming(2, {duration: 0}, finished => {
+            if (finished) runOnJS(handlePhaseChange)(2)
+          }),
+        ),
+        // Phase 3: Personality
+        withDelay(
+          PHASE_DURATION,
+          withTiming(3, {duration: 0}, finished => {
+            if (finished) runOnJS(handlePhaseChange)(3)
+          }),
+        ),
+        // Phase 4: Assembling
+        withDelay(
+          PHASE_DURATION,
+          withTiming(4, {duration: 0}, finished => {
+            if (finished) runOnJS(handlePhaseChange)(4)
+          }),
+        ),
+      )
+
+      // Overall progress (0 to 1) for smooth interpolations
+      extractionProgress.value = withTiming(1, {
+        duration: PHASE_DURATION * TOTAL_PHASES,
+        easing: Easing.linear,
+      })
+
+      // Intensity ramps up after all phases complete
+      intensity.value = withDelay(
+        PHASE_DURATION * TOTAL_PHASES,
+        withTiming(1, {duration: INTENSIFY_DURATION}, finished => {
+          if (finished) {
+            // Extraction complete, generate results
+            runOnJS(handleExtractionComplete)(onComplete)
+          }
+        }),
+      )
+    },
+    [
+      extractionParams,
+      extractionProgress,
+      currentPhase,
+      intensity,
+      resultOpacity,
+      resultScale,
+      handlePhaseChange,
+      handleExtractionComplete,
+    ],
   )
 
   const resetEngine = useCallback(() => {
+    // Cancel any running animations
+    cancelAnimation(extractionProgress)
+    cancelAnimation(currentPhase)
+    cancelAnimation(intensity)
+    cancelAnimation(resultOpacity)
+    cancelAnimation(resultScale)
+
+    // Reset shared values
+    extractionProgress.value = 0
+    currentPhase.value = -1
+    intensity.value = 0
+    resultOpacity.value = 0
+    resultScale.value = 0.5
+
+    // Reset JS state
     setEngineState(initialEngineState)
     setStatusText('numEros is idle')
     setSubStatus('Your love field is unaligned')
     setExtractionParams(null)
+    setIdleButtonEnabled(false)
     isRunningRef.current = false
-  }, [])
+  }, [extractionProgress, currentPhase, intensity, resultOpacity, resultScale])
+
+  const animationValues: EngineAnimationValues = {
+    extractionProgress,
+    currentPhase,
+    intensity,
+    resultOpacity,
+    resultScale,
+  }
 
   return (
     <EngineContext.Provider
       value={{
         engineState,
+        animationValues,
         statusText,
         subStatus,
         extractionParams,
         setExtractionParams,
         startExtraction,
         resetEngine,
+        idleButtonEnabled,
+        enableIdleButton,
+        disableIdleButton,
+        setStatusText,
+        setSubStatus,
       }}>
       {children}
     </EngineContext.Provider>

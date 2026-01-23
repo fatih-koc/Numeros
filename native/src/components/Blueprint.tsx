@@ -6,7 +6,6 @@ import Animated, {
   withTiming,
   withDelay,
   interpolate,
-  interpolateColor,
   Easing,
 } from 'react-native-reanimated'
 import Svg, {Defs, Pattern, Line, Rect, RadialGradient, Stop} from 'react-native-svg'
@@ -22,7 +21,6 @@ const LAYOUT_EASING = Easing.bezier(0.77, 0, 0.175, 1)
 
 interface BlueprintProps {
   data: ScanOutput
-  onSearch: () => void
 }
 
 // Energy color mapping
@@ -379,25 +377,11 @@ function Tile({tileKey, index, title, number, meaning, gridWidth, expandedKey, o
   )
 }
 
-export function Blueprint({data, onSearch}: BlueprintProps) {
+export function Blueprint({data}: BlueprintProps) {
   const {width: screenWidth} = useWindowDimensions()
   const gridWidth = Math.min(screenWidth - 48, 600)
 
   const [expandedKey, setExpandedKey] = React.useState<TileKey | null>(null)
-
-  const buttonOpacity = useSharedValue(1)
-
-  useEffect(() => {
-    buttonOpacity.value = withTiming(expandedKey === null ? 1 : 0, {
-      duration: 300,
-      easing: LAYOUT_EASING,
-    })
-  }, [expandedKey])
-
-  const buttonStyle = useAnimatedStyle(() => ({
-    opacity: buttonOpacity.value,
-    transform: [{scale: interpolate(buttonOpacity.value, [0, 1], [0.95, 1])}],
-  }))
 
   const handlePress = useCallback((key: TileKey) => {
     setExpandedKey(prev => (prev === key ? null : key))
@@ -489,14 +473,6 @@ export function Blueprint({data, onSearch}: BlueprintProps) {
         ))}
       </View>
 
-      {/* Button */}
-      <Animated.View style={buttonStyle} pointerEvents={expandedKey === null ? 'auto' : 'none'}>
-        <Pressable
-          style={({pressed}) => [styles.button, pressed && styles.buttonPressed]}
-          onPress={onSearch}>
-          <Text style={styles.buttonText}>SEARCH FOR RESONANCE</Text>
-        </Pressable>
-      </Animated.View>
     </View>
   )
 }
@@ -542,7 +518,7 @@ const styles = StyleSheet.create({
   },
   frontLabel: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 14,
     letterSpacing: 3,
     color: colors.textDim,
     textTransform: 'uppercase',
@@ -558,10 +534,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   frontMeaning: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 24,
     fontFamily: fonts.serif,
   },
   clickHint: {
@@ -588,7 +564,7 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 14,
     letterSpacing: 3,
     textTransform: 'uppercase',
     textAlign: 'center',
@@ -596,7 +572,7 @@ const styles = StyleSheet.create({
   },
   backSubtitle: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 14,
     letterSpacing: 2,
     color: colors.textDim,
     textAlign: 'center',
@@ -612,10 +588,10 @@ const styles = StyleSheet.create({
     lineHeight: 80,
   },
   backMeaning: {
-    fontSize: 18,
+    fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 26,
     fontFamily: fonts.serif,
     maxWidth: '80%',
     marginBottom: 24,
@@ -633,14 +609,14 @@ const styles = StyleSheet.create({
   detailsText: {
     fontSize: 16,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: 26,
     fontStyle: 'italic',
     fontFamily: fonts.serif,
     textAlign: 'center',
   },
   resonanceText: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 24,
     fontFamily: fonts.serif,
     textAlign: 'center',
     maxWidth: '85%',
@@ -661,25 +637,6 @@ const styles = StyleSheet.create({
   },
   closeText: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 20,
-  },
-  button: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
-    borderRadius: 50,
-    paddingHorizontal: 48,
-    paddingVertical: 16,
-  },
-  buttonPressed: {
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
-    transform: [{scale: 0.98}],
-  },
-  buttonText: {
-    fontFamily: fonts.mono,
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 3,
-    color: colors.textSecondary,
+    fontSize: 16,
   },
 })

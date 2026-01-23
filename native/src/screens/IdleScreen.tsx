@@ -19,9 +19,27 @@ import {fonts} from '../lib/fonts'
 
 export function IdleScreen() {
   const navigation = useNavigation()
-  const {engineState, statusText, subStatus, extractionParams, startExtraction, resetEngine} =
-    useEngine()
+  const {
+    engineState,
+    animationValues,
+    statusText,
+    subStatus,
+    extractionParams,
+    startExtraction,
+    resetEngine,
+    idleButtonEnabled,
+    enableIdleButton,
+    disableIdleButton,
+  } = useEngine()
   const hasNavigatedRef = useRef(false)
+  // Track if extraction is in progress to prevent premature reset
+  const isExtractingRef = useRef(false)
+
+  // Set extraction flag immediately when params exist (before useFocusEffect runs)
+  // This prevents resetEngine from being called when arriving from Input with params
+  if (extractionParams && !isExtractingRef.current) {
+    isExtractingRef.current = true
+  }
 
   // Status text pulse animation
   const statusOpacity = useSharedValue(1)
@@ -54,29 +72,59 @@ export function IdleScreen() {
   const navigateToBlueprint = useCallback(() => {
     if (!hasNavigatedRef.current) {
       hasNavigatedRef.current = true
+      // Navigate first - BlueprintScreen will reset engine state on focus
+      // This prevents the idle UI from flickering during transition
       navigation.navigate('Blueprint')
     }
   }, [navigation])
 
-  // Handle extraction when params are set (returning from Input screen)
+  // Handle focus events - reset engine only when returning from another screen
+  // NOTE: This callback must NOT access SharedValues directly to avoid worklet conversion
   useFocusEffect(
     useCallback(() => {
-      // Reset navigation flag when screen focuses
+      // Reset navigation flag on focus
       hasNavigatedRef.current = false
-      contentOpacity.value = 1
 
-      if (extractionParams && !engineState.isCalculating) {
-        startStatusPulse()
-        startExtraction(() => {
-          stopStatusPulse()
-          // Fade out content before navigating
-          contentOpacity.value = withTiming(0, {duration: 1000, easing: Easing.out(Easing.ease)}, () => {
-            runOnJS(navigateToBlueprint)()
-          })
-        })
+      // Only reset engine if not currently extracting
+      // We check isExtractingRef which is set true when extraction starts
+      // and set false on blur cleanup - this prevents reset during extraction->Blueprint transition
+      if (!isExtractingRef.current) {
+        resetEngine()
+        enableIdleButton()
       }
-    }, [extractionParams, engineState.isCalculating]),
+
+      // CRITICAL: Cleanup on blur
+      return () => {
+        disableIdleButton()
+        // Clear extraction flag on blur for safety (handles edge cases)
+        isExtractingRef.current = false
+      }
+    }, [resetEngine, enableIdleButton, disableIdleButton]),
   )
+
+  // Reset content opacity when screen gains focus (separate from useFocusEffect to avoid worklet issues)
+  useFocusEffect(
+    useCallback(() => {
+      contentOpacity.value = 1
+    }, [contentOpacity]),
+  )
+
+  // Separate effect for handling extraction - runs when extractionParams changes
+  // Note: isExtractingRef is set to true in render phase when params exist
+  useEffect(() => {
+    if (extractionParams && !engineState.isCalculating) {
+      // Ref is already true from render phase
+      disableIdleButton()
+      startStatusPulse()
+      startExtraction(() => {
+        stopStatusPulse()
+        // Fade out content before navigating
+        contentOpacity.value = withTiming(0, {duration: 1000, easing: Easing.out(Easing.ease)}, () => {
+          runOnJS(navigateToBlueprint)()
+        })
+      })
+    }
+  }, [extractionParams, engineState.isCalculating, disableIdleButton, startStatusPulse, startExtraction, stopStatusPulse, contentOpacity, navigateToBlueprint])
 
   // Start pulse when calculating
   useEffect(() => {
@@ -111,7 +159,15 @@ export function IdleScreen() {
         </TouchableOpacity>
 
         <Animated.View entering={FadeIn.duration(500)} style={styles.screenContainer}>
-          <LoveEngine {...engineState} />
+          <LoveEngine
+            isCalculating={engineState.isCalculating}
+            resultNumber={engineState.resultNumber}
+            currentPhase={animationValues.currentPhase}
+            intensity={animationValues.intensity}
+            extractionProgress={animationValues.extractionProgress}
+            resultOpacity={animationValues.resultOpacity}
+            resultScale={animationValues.resultScale}
+          />
 
           <View style={styles.statusContainer}>
             <Text style={styles.statusLabel}>LOVE ENGINE</Text>
@@ -121,7 +177,7 @@ export function IdleScreen() {
             <Text style={styles.subStatus}>{subStatus}</Text>
           </View>
 
-          {!engineState.isCalculating && (
+          {idleButtonEnabled && (
             <Animated.View entering={FadeIn.delay(300).duration(500)}>
               <TouchableOpacity
                 onPress={handleBeginAlignment}
@@ -166,12 +222,12 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     letterSpacing: 4,
     color: colors.textDim,
   },
   statusText: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '400',
     color: colors.textSecondary,
     fontFamily: fonts.serif,
@@ -192,7 +248,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     letterSpacing: 3,
     color: colors.textSecondary,

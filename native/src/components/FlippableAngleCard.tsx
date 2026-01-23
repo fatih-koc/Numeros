@@ -10,7 +10,7 @@ import Animated, {
 import {LinearGradient} from 'expo-linear-gradient'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
-import {ANGLE_SYMBOLS, ZODIAC_SYMBOLS, ANGLE_MEANINGS, ZODIAC_INFO} from '../lib/planetMeanings'
+import {ZODIAC_SYMBOLS, ANGLE_MEANINGS, ZODIAC_INFO} from '../lib/planetMeanings'
 
 interface FlippableAngleCardProps {
   angleKey: 'ascendant' | 'midheaven'
@@ -20,6 +20,18 @@ interface FlippableAngleCardProps {
 }
 
 const ANGLE_COLOR = '#10B981'
+
+// Arrow prefixes matching prototype
+const ANGLE_ARROWS: Record<string, string> = {
+  ascendant: '→',
+  midheaven: '↑',
+}
+
+// Short descriptions matching prototype
+const ANGLE_SHORT_DESC: Record<string, string> = {
+  ascendant: 'Self & Appearance',
+  midheaven: 'Career & Legacy',
+}
 
 export function FlippableAngleCard({
   angleKey,
@@ -63,8 +75,8 @@ export function FlippableAngleCard({
       {/* Front Face */}
       <Animated.View style={[styles.face, styles.frontFace, frontAnimatedStyle]}>
         <View style={styles.frontLabelRow}>
-          <Text style={[styles.frontSymbol, {color: angleColor}]}>
-            {ANGLE_SYMBOLS[angleKey]}
+          <Text style={[styles.frontArrow, {color: angleColor}]}>
+            {ANGLE_ARROWS[angleKey]}
           </Text>
           <Text style={styles.frontLabel}>{angleName}</Text>
         </View>
@@ -77,6 +89,7 @@ export function FlippableAngleCard({
           </Text>
         </View>
         <Text style={styles.frontDegree}>{Math.round(angle.degree_in_sign)}°</Text>
+        <Text style={styles.frontShortDesc}>{ANGLE_SHORT_DESC[angleKey]}</Text>
       </Animated.View>
 
       {/* Back Face */}
@@ -135,17 +148,17 @@ const styles = StyleSheet.create({
   frontLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 8,
   },
-  frontSymbol: {
-    fontFamily: fonts.symbols,
-    fontSize: 18,
+  frontArrow: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   frontLabel: {
     fontFamily: fonts.mono,
-    fontSize: 11,
-    letterSpacing: 4,
+    fontSize: 14,
+    letterSpacing: 3,
     color: colors.textDim,
   },
   frontSignRow: {
@@ -169,8 +182,15 @@ const styles = StyleSheet.create({
   },
   frontDegree: {
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textDim,
+    marginBottom: 8,
+  },
+  frontShortDesc: {
+    fontSize: 16,
+    color: colors.textDim,
+    fontStyle: 'italic',
+    fontFamily: fonts.serif,
   },
   backContent: {
     flex: 1,
@@ -182,22 +202,22 @@ const styles = StyleSheet.create({
   },
   backElementQuality: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 14,
     color: colors.textDim,
     letterSpacing: 2,
     marginBottom: 8,
   },
   backMeaning: {
-    fontSize: 13,
+    fontSize: 16,
     color: colors.textSecondary,
-    lineHeight: 17,
+    lineHeight: 22,
     marginBottom: 8,
     textAlign: 'center',
     fontFamily: fonts.serif,
   },
   backZodiacMeaning: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 16,
+    lineHeight: 22,
     textAlign: 'center',
     fontFamily: fonts.serif,
   },

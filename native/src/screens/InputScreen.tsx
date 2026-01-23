@@ -81,12 +81,12 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     letterSpacing: 4,
     color: colors.textDim,
   },
   statusText: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '400',
     color: colors.textSecondary,
     fontFamily: fonts.serif,

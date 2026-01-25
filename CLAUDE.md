@@ -36,8 +36,9 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 
 #### LoveEngine.tsx
 - Rotating number track (1-9) with counter-rotation to keep numbers upright
-- Shader canvas with 5 phase-based shaders
-- Sigils with Skia (Circle, Triangle, Diamond shapes)
+- **Reanimated-driven animation** via SharedValues from EngineContext
+- Sigils with Skia (Circle, Triangle, Diamond shapes) with opacity derived from `currentPhase`
+- Shader switching via `useDerivedValue` for smooth phase transitions
 - Inner core with 4-stop radial gradient
 - Bond sigil scale 0.8
 - Glow radii: 15-20px blur on sigils, 20px on active numbers, 40px on result
@@ -100,7 +101,9 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 
 #### ShaderCanvas.tsx
 - 5 GLSL shaders via Skia RuntimeEffect
-- Phase-based shader selection during calculation
+- **Dynamic shader switching** via SharedValue `shaderId`
+- All shaders rendered with opacity groups for smooth UI-thread transitions
+- No re-renders needed for shader changes
 
 #### ScreenWrapper.tsx
 - Common wrapper with Background and Particles
@@ -121,6 +124,16 @@ Zodiac:  A=Aries, B=Taurus, C=Gemini, D=Cancer, E=Leo, F=Virgo,
 Angles:  c=Ascendant, d=Midheaven, e=IC, f=Descendant
 ```
 
+### Typography Standards
+
+**App-wide font sizing:**
+| Category | Size | Used For |
+|----------|------|----------|
+| Label (mono) | 14 | Section titles, form labels, step indicators |
+| Main text (serif) | 17 | Primary content, status text |
+| Sub text (serif) | 16 | Descriptions, meanings, hints |
+| Button (mono) | 15 | All button text |
+
 ### Animation Standards
 
 **Easing Functions:**
@@ -134,8 +147,82 @@ Angles:  c=Ascendant, d=Midheaven, e=IC, f=Descendant
 - Entrance animations: 600ms
 - Focus states: 300ms
 - Button press: 100ms in, 200ms out
+- Extraction phase: 2000ms per phase
+- Intensity ramp: 1500ms
+- Result display: 1500ms
 
-### File Structure
+---
+
+## EngineContext - Reanimated Orchestration
+
+**Location:** `src/contexts/EngineContext.tsx`
+
+The engine uses **Reanimated SharedValues** for UI-thread animation orchestration instead of JS-thread setTimeout.
+
+### Shared Values (UI Thread)
+```typescript
+extractionProgress: SharedValue<number>  // 0→1 over full extraction
+currentPhase: SharedValue<number>        // 0→1→2→3→4 via withSequence
+intensity: SharedValue<number>           // 0→1 during final intensify
+resultOpacity: SharedValue<number>       // Result number fade in
+resultScale: SharedValue<number>         // Result number scale animation
+```
+
+### JS State
+```typescript
+engineState: { isCalculating, resultNumber, showResult }
+statusText: string           // "Extracting Life Path...", etc.
+subStatus: string            // "Reading your signature"
+extractionParams: UserInput | null
+idleButtonEnabled: boolean   // Visibility gate for BEGIN ALIGNMENT button
+```
+
+### Extraction Flow
+1. `startExtraction()` kicks off `withSequence` + `withDelay` for phases
+2. Each phase triggers `runOnJS(handlePhaseChange)` to update status text
+3. `intensity` animation triggers `runOnJS(handleExtractionComplete)` on finish
+4. Result is displayed, then `onComplete()` callback fades out and navigates
+
+### Visibility Gate Pattern (Flicker Prevention)
+
+**Problem:** Button flickers during navigation transitions due to React lifecycle.
+
+**Solution:** Context-level `idleButtonEnabled` boolean that:
+- Defaults to `false` (button hidden)
+- Only set `true` via `enableIdleButton()` in effects
+- Set `false` on blur cleanup and in `resetEngine()`
+
+**IdleScreen uses refs to avoid stale closures:**
+```typescript
+const isExtractingRef = useRef(false)
+
+// Set in render phase BEFORE hooks run
+if (extractionParams && !isExtractingRef.current) {
+  isExtractingRef.current = true
+}
+
+useFocusEffect(() => {
+  if (!isExtractingRef.current) {
+    resetEngine()
+    enableIdleButton()
+  }
+  return () => {
+    disableIdleButton()
+    isExtractingRef.current = false
+  }
+})
+```
+
+**Why this is flicker-proof:**
+1. Initial mount: `idleButtonEnabled=false` → hidden
+2. Effect runs: `enableIdleButton()` → shows with FadeIn
+3. Navigate away: cleanup runs → hidden
+4. Navigate back: first render sees `false` → hidden
+5. Effect runs: cycle repeats
+
+---
+
+## File Structure
 
 ```
 native/
@@ -151,11 +238,11 @@ native/
 │   │   ├── LoveEngine.tsx          # Circular visualization
 │   │   ├── Particles.tsx           # Floating particles
 │   │   ├── ScreenWrapper.tsx       # Common screen wrapper
-│   │   ├── ShaderCanvas.tsx        # WebGL shaders
+│   │   ├── ShaderCanvas.tsx        # WebGL shaders with dynamic switching
 │   │   ├── Stars.tsx               # Astrology chart display
 │   │   └── index.ts
 │   ├── contexts/
-│   │   ├── EngineContext.tsx       # LoveEngine state management
+│   │   ├── EngineContext.tsx       # Reanimated-orchestrated extraction
 │   │   └── NumerologyContext.tsx   # Scan output state
 │   ├── lib/
 │   │   ├── cities.ts               # City lookup for coordinates
@@ -168,6 +255,7 @@ native/
 │   │   └── index.ts
 │   ├── screens/
 │   │   ├── BlueprintScreen.tsx     # Results screen
+│   │   ├── IdleScreen.tsx          # Main idle screen with LoveEngine
 │   │   └── InputScreen.tsx         # Input form screen
 │   └── types/
 │       └── webgl.d.ts
@@ -227,7 +315,6 @@ export const ZODIAC_COLORS: Record<string, string> = {
 
 ### Still Missing / TODO
 
-- [ ] Navigation between screens (React Navigation setup incomplete)
 - [ ] API client integration with backend
 - [ ] Auth context with SecureStore
 - [ ] Scan screen (match discovery)
@@ -346,6 +433,28 @@ Use **react-native-svg** only for:
 - Always use `StyleSheet.create()` for styles
 - Use `Pressable` instead of `TouchableOpacity` for better customization
 
+### Reanimated Best Practices
+
+- Use `SharedValue` for UI-thread animations
+- Use `useDerivedValue` for computed animation values
+- Use `runOnJS` sparingly for JS-thread callbacks
+- Avoid mixing refs with worklet callbacks (causes "modified key" error)
+- Split `useFocusEffect` hooks: one for JS logic, one for SharedValue updates
+
 ---
 
-*Last updated: 2026-01-22*
+## Known Issues & Solutions
+
+### Button Flicker on Navigation
+**Problem:** BEGIN ALIGNMENT button flickers during screen transitions.
+**Cause:** React renders before effects run, and React Navigation keeps screens mounted.
+**Solution:** Context-level visibility gate (`idleButtonEnabled`) + ref-based extraction tracking.
+
+### Reanimated "Modified Key" Error
+**Problem:** `Tried to modify key 'current' of an object which has been passed to a worklet`
+**Cause:** Assigning to `.current` of a ref that's read in a worklet-associated callback.
+**Solution:** Don't mix refs with SharedValue access in the same callback. Split into separate effects.
+
+---
+
+*Last updated: 2026-01-24*

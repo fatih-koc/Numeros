@@ -5,10 +5,8 @@ import {
   Text,
   TextInput,
   Pressable,
-  Platform,
   ScrollView,
 } from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import Animated, {
   FadeIn,
   useSharedValue,
@@ -32,6 +30,95 @@ interface InputFormProps {
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput)
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
+// Format date input as DD.MM.YYYY
+function formatDateInput(text: string, prevText: string): string {
+  // Remove non-numeric characters except dots
+  const cleaned = text.replace(/[^0-9.]/g, '')
+
+  // If user is deleting, allow it
+  if (cleaned.length < prevText.length) {
+    return cleaned
+  }
+
+  // Remove all dots to work with pure numbers
+  const numbers = cleaned.replace(/\./g, '')
+
+  // Build formatted string
+  let formatted = ''
+  for (let i = 0; i < numbers.length && i < 8; i++) {
+    if (i === 2 || i === 4) {
+      formatted += '.'
+    }
+    formatted += numbers[i]
+  }
+
+  return formatted
+}
+
+// Format time input as HH:MM
+function formatTimeInput(text: string, prevText: string): string {
+  // Remove non-numeric characters except colon
+  const cleaned = text.replace(/[^0-9:]/g, '')
+
+  // If user is deleting, allow it
+  if (cleaned.length < prevText.length) {
+    return cleaned
+  }
+
+  // Remove all colons to work with pure numbers
+  const numbers = cleaned.replace(/:/g, '')
+
+  // Build formatted string
+  let formatted = ''
+  for (let i = 0; i < numbers.length && i < 4; i++) {
+    if (i === 2) {
+      formatted += ':'
+    }
+    formatted += numbers[i]
+  }
+
+  return formatted
+}
+
+// Parse DD.MM.YYYY to YYYY-MM-DD
+function parseDateString(dateStr: string): string | null {
+  const parts = dateStr.split('.')
+  if (parts.length !== 3) return null
+
+  const day = parseInt(parts[0], 10)
+  const month = parseInt(parts[1], 10)
+  const year = parseInt(parts[2], 10)
+
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return null
+  if (day < 1 || day > 31) return null
+  if (month < 1 || month > 12) return null
+  if (year < 1900 || year > new Date().getFullYear()) return null
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+// Validate date string
+function isValidDate(dateStr: string): boolean {
+  return parseDateString(dateStr) !== null
+}
+
+// Validate time string
+function isValidTime(timeStr: string): boolean {
+  if (!timeStr || timeStr.length === 0) return true // Optional field
+
+  const parts = timeStr.split(':')
+  if (parts.length !== 2) return false
+
+  const hours = parseInt(parts[0], 10)
+  const minutes = parseInt(parts[1], 10)
+
+  if (isNaN(hours) || isNaN(minutes)) return false
+  if (hours < 0 || hours > 23) return false
+  if (minutes < 0 || minutes > 59) return false
+
+  return true
+}
+
 export function InputForm({onSubmit}: InputFormProps) {
   const [step, setStep] = useState<1 | 2>(1)
 
@@ -40,13 +127,10 @@ export function InputForm({onSubmit}: InputFormProps) {
   const [nameMiddle, setNameMiddle] = useState('')
   const [nameLast, setNameLast] = useState('')
 
-  // Step 2 fields
-  const [date, setDate] = useState<Date | null>(null)
-  const [birthTime, setBirthTime] = useState<Date | null>(null)
+  // Step 2 fields - now strings
+  const [dateText, setDateText] = useState('')
+  const [timeText, setTimeText] = useState('')
   const [city, setCity] = useState('')
-
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [showTimePicker, setShowTimePicker] = useState(false)
 
   // Focus states
   const firstFocus = useSharedValue(0)
@@ -57,48 +141,12 @@ export function InputForm({onSubmit}: InputFormProps) {
   const cityFocus = useSharedValue(0)
   const buttonScale = useSharedValue(1)
 
-  const formatDate = (d: Date): string => {
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+  const handleDateTextChange = (text: string) => {
+    setDateText(formatDateInput(text, dateText))
   }
 
-  const formatDisplayDate = (d: Date): string => {
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  const formatDisplayTime = (d: Date): string => {
-    const hours = d.getHours()
-    const minutes = d.getMinutes()
-    const ampm = hours >= 12 ? 'PM' : 'AM'
-    const displayHours = hours % 12 || 12
-    const displayMinutes = String(minutes).padStart(2, '0')
-    return `${displayHours}:${displayMinutes} ${ampm}`
-  }
-
-  const formatTimeForSubmit = (d: Date): string => {
-    const hours = String(d.getHours()).padStart(2, '0')
-    const minutes = String(d.getMinutes()).padStart(2, '0')
-    return `${hours}:${minutes}`
-  }
-
-  const handleDateChange = (_: unknown, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios')
-    if (selectedDate) {
-      setDate(selectedDate)
-    }
-  }
-
-  const handleTimeChange = (_: unknown, selectedTime?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios')
-    if (selectedTime) {
-      setBirthTime(selectedTime)
-    }
+  const handleTimeTextChange = (text: string) => {
+    setTimeText(formatTimeInput(text, timeText))
   }
 
   const handleStep1Submit = () => {
@@ -108,7 +156,8 @@ export function InputForm({onSubmit}: InputFormProps) {
   }
 
   const handleStep2Submit = () => {
-    if (!date) return
+    const birthDate = parseDateString(dateText)
+    if (!birthDate) return
 
     let birth_place = null
     if (city.trim()) {
@@ -127,8 +176,8 @@ export function InputForm({onSubmit}: InputFormProps) {
       name_first: nameFirst.trim(),
       name_middle: nameMiddle.trim() || null,
       name_last: nameLast.trim(),
-      birth_date: formatDate(date),
-      birth_hour: birthTime ? formatTimeForSubmit(birthTime) : null,
+      birth_date: birthDate,
+      birth_hour: timeText && isValidTime(timeText) ? timeText : null,
       birth_place,
     }
 
@@ -140,7 +189,7 @@ export function InputForm({onSubmit}: InputFormProps) {
   }
 
   const isStep1Valid = nameFirst.trim().length > 0 && nameLast.trim().length > 0
-  const isStep2Valid = date !== null
+  const isStep2Valid = isValidDate(dateText) && isValidTime(timeText)
 
   // Animated input style creator
   const createInputStyle = (focusValue: Animated.SharedValue<number>, focusColor = 'rgba(139, 92, 246, 0.5)') =>
@@ -280,45 +329,18 @@ export function InputForm({onSubmit}: InputFormProps) {
         <Animated.View entering={FadeIn.duration(500)} style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>DATE OF BIRTH</Text>
-            <AnimatedPressable
+            <AnimatedTextInput
               style={[styles.input, dateInputStyle]}
-              onPress={() => {
-                dateFocus.value = withTiming(1, {duration: 300, easing: EASING})
-                setShowDatePicker(true)
-              }}>
-              <Text style={[styles.inputText, !date && styles.inputPlaceholder]}>
-                {date ? formatDisplayDate(date) : 'Select your birth date'}
-              </Text>
-            </AnimatedPressable>
-
-            {showDatePicker && (
-              <View>
-                <DateTimePicker
-                  value={date || new Date(1990, 0, 1)}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(e, d) => {
-                    handleDateChange(e, d)
-                    if (Platform.OS !== 'ios') {
-                      dateFocus.value = withTiming(0, {duration: 300, easing: EASING})
-                    }
-                  }}
-                  maximumDate={new Date()}
-                  minimumDate={new Date(1900, 0, 1)}
-                  themeVariant="dark"
-                />
-                {Platform.OS === 'ios' && (
-                  <Pressable
-                    style={styles.doneButton}
-                    onPress={() => {
-                      setShowDatePicker(false)
-                      dateFocus.value = withTiming(0, {duration: 300, easing: EASING})
-                    }}>
-                    <Text style={styles.doneButtonText}>Done</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
+              placeholder="DD.MM.YYYY"
+              placeholderTextColor={colors.textDim}
+              value={dateText}
+              onChangeText={handleDateTextChange}
+              onFocus={handleFocusIn(dateFocus)}
+              onBlur={handleFocusOut(dateFocus)}
+              keyboardType="numeric"
+              maxLength={10}
+              autoCorrect={false}
+            />
           </View>
 
           <View style={styles.inputGroup}>
@@ -326,43 +348,18 @@ export function InputForm({onSubmit}: InputFormProps) {
               <Text style={styles.label}>BIRTH TIME</Text>
               <Text style={styles.labelOptional}>(Optional)</Text>
             </View>
-            <AnimatedPressable
+            <AnimatedTextInput
               style={[styles.input, timeInputStyle]}
-              onPress={() => {
-                timeFocus.value = withTiming(1, {duration: 300, easing: EASING})
-                setShowTimePicker(true)
-              }}>
-              <Text style={[styles.inputText, !birthTime && styles.inputPlaceholder]}>
-                {birthTime ? formatDisplayTime(birthTime) : 'Select your birth time'}
-              </Text>
-            </AnimatedPressable>
-
-            {showTimePicker && (
-              <View>
-                <DateTimePicker
-                  value={birthTime || new Date(2000, 0, 1, 12, 0)}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(e, t) => {
-                    handleTimeChange(e, t)
-                    if (Platform.OS !== 'ios') {
-                      timeFocus.value = withTiming(0, {duration: 300, easing: EASING})
-                    }
-                  }}
-                  themeVariant="dark"
-                />
-                {Platform.OS === 'ios' && (
-                  <Pressable
-                    style={styles.doneButton}
-                    onPress={() => {
-                      setShowTimePicker(false)
-                      timeFocus.value = withTiming(0, {duration: 300, easing: EASING})
-                    }}>
-                    <Text style={styles.doneButtonText}>Done</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
+              placeholder="HH:MM"
+              placeholderTextColor={colors.textDim}
+              value={timeText}
+              onChangeText={handleTimeTextChange}
+              onFocus={handleFocusIn(timeFocus)}
+              onBlur={handleFocusOut(timeFocus)}
+              keyboardType="numeric"
+              maxLength={5}
+              autoCorrect={false}
+            />
           </View>
 
           <View style={styles.inputGroup}>
@@ -515,27 +512,6 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0,
     shadowRadius: 0,
-  },
-  inputText: {
-    fontSize: 17,
-    color: colors.textPrimary,
-    fontFamily: fonts.serif,
-  },
-  inputPlaceholder: {
-    color: colors.textDim,
-  },
-  doneButton: {
-    alignSelf: 'center',
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-  },
-  doneButtonText: {
-    fontFamily: fonts.mono,
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'rgba(236, 72, 153, 0.6)',
-    letterSpacing: 1,
   },
   buttonRow: {
     flexDirection: 'row',

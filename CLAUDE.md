@@ -34,6 +34,13 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 - RadialGradient glows: violet (center), pink (top-left), indigo (bottom-right)
 - Noise texture overlay: 0.02 alpha, multiply blend mode
 
+#### SplashScreen.tsx
+- Initial app screen with logo and breathing text
+- **Logo animation**: Scale 0.95→1 with 400ms easeOut
+- **Text animation**: "Aligning energies..." with breathing opacity cycle (0.8→0.4→0.8)
+- Auto-navigates to Idle screen after 2 seconds
+- Uses ScreenWrapper for consistent background
+
 #### LoveEngine.tsx
 - Rotating number track (1-9) with counter-rotation to keep numbers upright
 - **Reanimated-driven animation** via SharedValues from EngineContext
@@ -90,8 +97,8 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 - Two-step form: Name (step 1) → Birth data (step 2)
 - Animated focus states on inputs (border color + shadow glow)
 - 300ms easeInOutQuart transitions
-- **Native date picker** with spinner display (iOS)
-- **Native time picker** for birth hour (spinner on iOS)
+- **Text inputs** for date (DD.MM.YYYY format) and time (HH:MM format)
+- Auto-formatting functions for date and time inputs
 - Button press animation (scale 0.98)
 - City lookup for birth place coordinates
 
@@ -254,6 +261,7 @@ native/
 │   │   ├── scanOutput.ts           # Type definitions
 │   │   └── index.ts
 │   ├── screens/
+│   │   ├── SplashScreen.tsx        # Initial splash with logo animation
 │   │   ├── BlueprintScreen.tsx     # Results screen
 │   │   ├── IdleScreen.tsx          # Main idle screen with LoveEngine
 │   │   └── InputScreen.tsx         # Input form screen
@@ -262,8 +270,8 @@ native/
 ├── assets/
 │   ├── fonts/
 │   │   ├── Astronomicon.ttf        # Astrological symbols
-│   │   ├── CormorantGaramond-*.ttf # Serif font
-│   │   └── LetterGothicStd.otf     # Mono font
+│   │   ├── CormorantGaramond-*.ttf # Serif font (Light, LightItalic, Regular, Italic)
+│   │   └── JetBrainsMono-*.ttf     # Mono font (Regular, Italic, Medium, SemiBold)
 │   └── images/
 └── ios/, android/                   # Native projects
 ```

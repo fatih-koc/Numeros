@@ -5,9 +5,11 @@ import Animated, {
   FadeIn,
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
   withRepeat,
   withSequence,
   withTiming,
+  interpolateColor,
   Easing,
   runOnJS,
 } from 'react-native-reanimated'
@@ -61,9 +63,52 @@ export function IdleScreen() {
     statusOpacity.value = withTiming(1, {duration: 300})
   }, [statusOpacity])
 
-  const statusTextStyle = useAnimatedStyle(() => ({
-    opacity: statusOpacity.value,
-  }))
+  // Phase colors for status text
+  // Phase 0: life_path (indigo), Phase 1: soul_urge (orange), Phase 2: expression (green)
+  // Phase 3: personality (pink), Phase 4: assembling (textSecondary)
+  const phaseColors = [
+    colors.energy7,       // Phase 0 - indigo
+    colors.energy3,       // Phase 1 - orange
+    colors.energy4,       // Phase 2 - green
+    colors.energy2,       // Phase 3 - pink
+    colors.textSecondary, // Phase 4 - neutral
+  ]
+
+  const statusTextStyle = useAnimatedStyle(() => {
+    const phase = animationValues.currentPhase.value
+
+    // When idle (phase -1), use textSecondary
+    if (phase < 0) {
+      return {
+        opacity: statusOpacity.value,
+        color: colors.textSecondary,
+        textShadowColor: 'transparent',
+        textShadowOffset: {width: 0, height: 0},
+        textShadowRadius: 0,
+      }
+    }
+
+    // Clamp phase to valid range
+    const clampedPhase = Math.min(Math.max(Math.floor(phase), 0), 4)
+
+    // Use interpolateColor for smooth transitions during extraction
+    const color = interpolateColor(
+      phase,
+      [0, 1, 2, 3, 4],
+      phaseColors,
+    )
+
+    // Text shadow glow for phases 0-3 (not for phase 4)
+    const shadowColor = clampedPhase < 4 ? phaseColors[clampedPhase] : 'transparent'
+
+    return {
+      opacity: statusOpacity.value,
+      color,
+      textShadowColor: shadowColor,
+      textShadowOffset: {width: 0, height: 0},
+      textShadowRadius: clampedPhase < 4 ? 20 : 0,
+    }
+  })
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -197,8 +242,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 20,
+    paddingHorizontal: 24,
   },
   logoContainer: {
     marginBottom: 24,

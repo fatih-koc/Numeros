@@ -1,11 +1,13 @@
 import type {NativeStackScreenProps} from '@react-navigation/native-stack'
 
 export type RootStackParamList = {
+  Splash: undefined
   Idle: undefined
   Input: undefined
   Blueprint: undefined
 }
 
+export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>
 export type IdleScreenProps = NativeStackScreenProps<RootStackParamList, 'Idle'>
 export type InputScreenProps = NativeStackScreenProps<RootStackParamList, 'Input'>
 export type BlueprintScreenProps = NativeStackScreenProps<RootStackParamList, 'Blueprint'>

@@ -1,5 +1,13 @@
 import React from 'react'
-import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native'
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import {ScreenWrapper} from '../components/ScreenWrapper'
@@ -25,39 +33,47 @@ export function InputScreen() {
 
   return (
     <ScreenWrapper>
-      <View style={styles.content}>
-        {/* Logo */}
-        <TouchableOpacity
-          onPress={handleLogoPress}
-          activeOpacity={0.7}
-          style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/images/numeros_text.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <View style={styles.content}>
+          {/* Logo */}
+          <TouchableOpacity
+            onPress={handleLogoPress}
+            activeOpacity={0.7}
+            style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/images/numeros_text.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
 
-        <Animated.View entering={FadeIn.duration(500)} style={styles.screenContainer}>
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusLabel}>IDENTITY INPUT</Text>
-            <Text style={styles.statusText}>Enter your human signature</Text>
-            <Text style={styles.subStatus}>These values encode how you love</Text>
-          </View>
+          <Animated.View entering={FadeIn.duration(500)} style={styles.screenContainer}>
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusLabel}>IDENTITY INPUT</Text>
+              <Text style={styles.statusText}>Enter your human signature</Text>
+              <Text style={styles.subStatus}>These values encode how you love</Text>
+            </View>
 
-          <InputForm onSubmit={handleFormSubmit} />
-        </Animated.View>
-      </View>
+            <InputForm onSubmit={handleFormSubmit} />
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   )
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 20,
+    paddingHorizontal: 24,
   },
   logoContainer: {
     marginBottom: 24,

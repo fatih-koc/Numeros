@@ -7,21 +7,24 @@ import {colors} from '../lib/colors'
 
 interface ScreenWrapperProps {
   children: ReactNode
+  edges?: ('top' | 'bottom' | 'left' | 'right')[]
 }
 
-export function ScreenWrapper({children}: ScreenWrapperProps) {
+export function ScreenWrapper({children, edges = ['top', 'bottom']}: ScreenWrapperProps) {
   return (
     <View style={styles.container}>
-      {/* Background layer - z-index 0 */}
+      {/* Background layer */}
       <Background />
 
-      {/* Particles layer - z-index 1 */}
-      <View style={styles.particlesLayer}>
+      {/* Particles layer */}
+      <View style={styles.particlesLayer} pointerEvents="none">
         <Particles />
       </View>
 
-      {/* Content layer - z-index 10 */}
-      <SafeAreaView style={styles.safeArea}>{children}</SafeAreaView>
+      {/* Content layer with safe area */}
+      <SafeAreaView style={styles.safeArea} edges={edges}>
+        {children}
+      </SafeAreaView>
     </View>
   )
 }
@@ -34,11 +37,9 @@ const styles = StyleSheet.create({
   particlesLayer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
-    elevation: 1,
   },
   safeArea: {
     flex: 1,
     zIndex: 10,
-    elevation: 10,
   },
 })

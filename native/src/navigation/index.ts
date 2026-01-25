@@ -1,2 +1,2 @@
 export {RootNavigator} from './RootNavigator'
-export type {RootStackParamList, IdleScreenProps, InputScreenProps, BlueprintScreenProps} from './types'
+export type {RootStackParamList, SplashScreenProps, IdleScreenProps, InputScreenProps, BlueprintScreenProps} from './types'

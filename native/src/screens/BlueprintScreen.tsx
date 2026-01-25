@@ -16,18 +16,16 @@ export function BlueprintScreen() {
   const {scanOutput, clearScanOutput} = useNumerology()
   const {resetEngine} = useEngine()
 
-  const handleSearchResonance = () => {
-    Alert.alert(
-      'Coming Soon',
-      'Universe scan would begin here...\n\nThis prototype shows the extraction ritual. The full app would continue to the scanning and matching screens.',
-      [{text: 'OK'}],
-    )
+  const handleYourDay = () => {
+    navigation.navigate('YourDayPreview')
   }
 
-  const handleUpgradeChart = () => {
-    clearScanOutput()
-    resetEngine()
-    navigation.navigate('Input')
+  const handleContinue = () => {
+    Alert.alert(
+      'Coming Soon',
+      'This would continue to the next step in your journey...\n\nThe full app would proceed to account creation or matching.',
+      [{text: 'OK'}],
+    )
   }
 
   const handleLogoPress = () => {
@@ -68,8 +66,8 @@ export function BlueprintScreen() {
         <Animated.View entering={FadeIn.duration(500)} style={styles.screenContainer}>
           <ChartTabs
             scanData={scanOutput}
-            onSearch={handleSearchResonance}
-            onUpgrade={handleUpgradeChart}
+            onYourDay={handleYourDay}
+            onContinue={handleContinue}
           />
         </Animated.View>
       </ScrollView>

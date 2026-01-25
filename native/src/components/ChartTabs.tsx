@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {StyleSheet, View, Text, Pressable, Alert} from 'react-native'
+import {StyleSheet, View, Text, Pressable} from 'react-native'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import type {ScanOutput} from '../lib/scanOutput'
 import {Blueprint} from './Blueprint'
@@ -9,24 +9,12 @@ import {fonts} from '../lib/fonts'
 
 interface ChartTabsProps {
   scanData: ScanOutput
-  onSearch: () => void
-  onUpgrade?: () => void
-  onShare?: () => void
+  onYourDay: () => void
+  onContinue: () => void
 }
 
-export function ChartTabs({scanData, onSearch, onUpgrade, onShare}: ChartTabsProps) {
+export function ChartTabs({scanData, onYourDay, onContinue}: ChartTabsProps) {
   const [activeTab, setActiveTab] = useState<'numbers' | 'stars'>('numbers')
-
-  const handleShare = () => {
-    if (onShare) {
-      onShare()
-    } else {
-      Alert.alert(
-        'Share',
-        'Share functionality would allow you to share your cosmic blueprint with others.'
-      )
-    }
-  }
 
   return (
     <View style={styles.container}>
@@ -73,31 +61,33 @@ export function ChartTabs({scanData, onSearch, onUpgrade, onShare}: ChartTabsPro
 
         {activeTab === 'stars' && (
           <Animated.View key="stars" entering={FadeIn.duration(800)}>
-            <Stars data={scanData} onUpgrade={onUpgrade} />
+            <Stars data={scanData} />
           </Animated.View>
         )}
       </View>
 
-      {/* Unified Bottom Actions - visible on both tabs */}
+      {/* Unified Bottom Actions */}
       <View style={styles.bottomActions}>
+        {/* Forecast Button - Ghost Style */}
         <Pressable
           style={({pressed}) => [
             styles.actionButton,
-            styles.shareButton,
+            styles.forecastButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={handleShare}>
-          <Text style={styles.actionButtonText}>Share</Text>
+          onPress={onYourDay}>
+          <Text style={styles.forecastButtonText}>Forecast</Text>
         </Pressable>
 
+        {/* Continue Button - Primary Style */}
         <Pressable
           style={({pressed}) => [
             styles.actionButton,
-            styles.resonanceButton,
+            styles.continueButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={onSearch}>
-          <Text style={styles.actionButtonText}>Resonance</Text>
+          onPress={onContinue}>
+          <Text style={styles.continueButtonText}>Continue</Text>
         </Pressable>
       </View>
     </View>
@@ -151,7 +141,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionButton: {
-    paddingHorizontal: 48,
     paddingVertical: 16,
     borderRadius: 50,
     borderWidth: 1,
@@ -159,17 +148,26 @@ const styles = StyleSheet.create({
   actionButtonPressed: {
     transform: [{translateY: 0}, {scale: 0.98}],
   },
-  shareButton: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+  forecastButton: {
+    paddingHorizontal: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  resonanceButton: {
+  forecastButtonText: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 14,
+    letterSpacing: 3,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textTransform: 'uppercase',
+  },
+  continueButton: {
+    paddingHorizontal: 48,
     backgroundColor: 'rgba(139, 92, 246, 0.15)',
     borderColor: 'rgba(139, 92, 246, 0.3)',
   },
-  actionButtonText: {
+  continueButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 15,
+    fontSize: 14,
     letterSpacing: 3,
     color: colors.textPrimary,
     textTransform: 'uppercase',

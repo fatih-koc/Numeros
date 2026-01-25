@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Idle: undefined
   Input: undefined
   Blueprint: undefined
+  YourDayPreview: undefined
 }
 
 export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>

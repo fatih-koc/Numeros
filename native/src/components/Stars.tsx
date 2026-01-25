@@ -16,7 +16,6 @@ import {FlippableAngleCard} from './FlippableAngleCard'
 
 interface StarsProps {
   data: ScanOutput
-  onUpgrade?: () => void
 }
 
 // Chart level display
@@ -68,24 +67,13 @@ function ChartLevelIndicator({chart_level}: {chart_level: number}) {
   )
 }
 
-// Upgrade Button component
-function UpgradeButton({chart_level, onUpgrade}: {chart_level: number; onUpgrade?: () => void}) {
-  if (!onUpgrade) return null
-
-  return (
-    <Pressable style={styles.upgradeButton} onPress={onUpgrade}>
-      <Text style={styles.upgradeText}>
-        {chart_level === 1
-          ? 'Add birth time for precise Moon and Enhanced chart'
-          : chart_level === 2
-          ? 'Add birth place for Full Chart with houses and angles'
-          : 'Add birth place for houses and angles'}
-      </Text>
-    </Pressable>
-  )
+// Upgrade Button component - currently hidden
+function UpgradeButton({chart_level}: {chart_level: number}) {
+  // Upgrade functionality removed for now
+  return null
 }
 
-export function Stars({data, onUpgrade}: StarsProps) {
+export function Stars({data}: StarsProps) {
   const astro = data.astrology
   const chart_level = data.chart_level
 
@@ -161,7 +149,7 @@ export function Stars({data, onUpgrade}: StarsProps) {
           </View>
         </View>
 
-        <UpgradeButton chart_level={chart_level} onUpgrade={onUpgrade} />
+        <UpgradeButton chart_level={chart_level} />
       </Animated.View>
     )
   }
@@ -231,7 +219,7 @@ export function Stars({data, onUpgrade}: StarsProps) {
           </View>
         </View>
 
-        <UpgradeButton chart_level={chart_level} onUpgrade={onUpgrade} />
+        <UpgradeButton chart_level={chart_level} />
       </Animated.View>
     )
   }

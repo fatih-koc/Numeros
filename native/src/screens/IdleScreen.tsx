@@ -184,6 +184,11 @@ export function IdleScreen() {
     navigation.navigate('Input')
   }
 
+  const handleLogin = () => {
+    // TODO: Navigate to login/session check
+    // For now, just show an alert
+  }
+
   const handleLogoPress = () => {
     resetEngine()
   }
@@ -223,14 +228,25 @@ export function IdleScreen() {
           </View>
 
           {idleButtonEnabled && (
-            <Animated.View entering={FadeIn.delay(300).duration(500)}>
-              <TouchableOpacity
-                onPress={handleBeginAlignment}
-                style={styles.primaryButton}
-                activeOpacity={0.8}>
-                <Text style={styles.primaryButtonText}>BEGIN ALIGNMENT</Text>
-              </TouchableOpacity>
-            </Animated.View>
+            <>
+              <Animated.View entering={FadeIn.delay(300).duration(500)}>
+                <TouchableOpacity
+                  onPress={handleBeginAlignment}
+                  style={styles.primaryButton}
+                  activeOpacity={0.8}>
+                  <Text style={styles.primaryButtonText}>BEGIN ALIGNMENT</Text>
+                </TouchableOpacity>
+              </Animated.View>
+
+              <Animated.View entering={FadeIn.delay(400).duration(500)}>
+                <TouchableOpacity
+                  onPress={handleLogin}
+                  style={styles.loginLink}
+                  activeOpacity={0.7}>
+                  <Text style={styles.loginLinkText}>I have an account</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </>
           )}
         </Animated.View>
       </Animated.View>
@@ -294,5 +310,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     letterSpacing: 3,
     color: colors.textSecondary,
+  },
+  loginLink: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  loginLinkText: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    fontWeight: '300',
+    color: 'rgba(255, 255, 255, 0.4)',
   },
 })

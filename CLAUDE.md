@@ -41,6 +41,15 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 - Auto-navigates to Idle screen after 2 seconds
 - Uses ScreenWrapper for consistent background
 
+#### YourDayPreviewScreen.tsx
+- Daily numerology forecast with shareable card
+- **Three card styles**: Numbers, Stars, Combined (swipeable)
+- Universal day number calculation (reduces date to single digit)
+- Energy data with color and glow for each day number (1-9)
+- **Swipe gestures**: PanResponder for card style navigation
+- Save and Share buttons (native Share API)
+- Close button to return to Blueprint
+
 #### LoveEngine.tsx
 - Rotating number track (1-9) with counter-rotation to keep numbers upright
 - **Reanimated-driven animation** via SharedValues from EngineContext
@@ -262,9 +271,10 @@ native/
 │   │   └── index.ts
 │   ├── screens/
 │   │   ├── SplashScreen.tsx        # Initial splash with logo animation
-│   │   ├── BlueprintScreen.tsx     # Results screen
 │   │   ├── IdleScreen.tsx          # Main idle screen with LoveEngine
-│   │   └── InputScreen.tsx         # Input form screen
+│   │   ├── InputScreen.tsx         # Input form screen
+│   │   ├── BlueprintScreen.tsx     # Results screen with ChartTabs
+│   │   └── YourDayPreviewScreen.tsx # Daily forecast shareable card
 │   └── types/
 │       └── webgl.d.ts
 ├── assets/

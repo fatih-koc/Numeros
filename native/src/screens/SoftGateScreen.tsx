@@ -10,6 +10,8 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import {useNavigation} from '@react-navigation/native'
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import type {RootStackParamList} from '../navigation/types'
 import Animated, {
   FadeIn,
   useSharedValue,
@@ -207,8 +209,10 @@ const MOCK_PROFILES = [
   },
 ]
 
+type SoftGateNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SoftGate'>
+
 export function SoftGateScreen() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<SoftGateNavigationProp>()
   const {scanOutput} = useNumerology()
   const {width: screenWidth} = useWindowDimensions()
 
@@ -226,11 +230,7 @@ export function SoftGateScreen() {
   const fullName = scanOutput.computed?.name_full || 'You'
 
   const handleCreateAccount = () => {
-    Alert.alert(
-      'Create Account',
-      'This would navigate to profile setup where you create your account and upload a photo.',
-      [{text: 'OK'}],
-    )
+    navigation.navigate('ProfileSetup')
   }
 
   const handleSkip = () => {

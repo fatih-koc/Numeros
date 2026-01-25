@@ -7,6 +7,7 @@ export type RootStackParamList = {
   Blueprint: undefined
   YourDayPreview: undefined
   SoftGate: undefined
+  ProfileSetup: undefined
 }
 
 export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>

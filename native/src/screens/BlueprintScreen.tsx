@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react'
-import {StyleSheet, TouchableOpacity, Image, Alert, ScrollView} from 'react-native'
+import {StyleSheet, TouchableOpacity, Image, ScrollView} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import Animated, {FadeIn} from 'react-native-reanimated'
@@ -21,11 +21,7 @@ export function BlueprintScreen() {
   }
 
   const handleContinue = () => {
-    Alert.alert(
-      'Coming Soon',
-      'This would continue to the next step in your journey...\n\nThe full app would proceed to account creation or matching.',
-      [{text: 'OK'}],
-    )
+    navigation.navigate('SoftGate')
   }
 
   const handleLogoPress = () => {

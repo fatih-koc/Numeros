@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 128,
     height: 128,
+    opacity: 0.4,
   },
   statusText: {
     fontFamily: fonts.mono,

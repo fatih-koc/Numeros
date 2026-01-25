@@ -50,6 +50,16 @@ Convert the **prototype** (React/Vite) to **native** (React Native/Expo) while i
 - Save and Share buttons (native Share API)
 - Close button to return to Blueprint
 
+#### SoftGateScreen.tsx
+- Account creation prompt after Blueprint
+- Glossy elevated container with blur backdrop
+- User's name and zodiac sign display
+- **4-column number grid**: Life, Soul, Expression, Personality with colors
+- "Souls Awaiting Resonance" section with 2x2 mock profile grid
+- Profile cards show numerology numbers overlay
+- Social proof text: "12,847 resonances today"
+- "Create Account" primary button + "Skip and explore" link
+
 #### LoveEngine.tsx
 - Rotating number track (1-9) with counter-rotation to keep numbers upright
 - **Reanimated-driven animation** via SharedValues from EngineContext
@@ -274,7 +284,8 @@ native/
 │   │   ├── IdleScreen.tsx          # Main idle screen with LoveEngine
 │   │   ├── InputScreen.tsx         # Input form screen
 │   │   ├── BlueprintScreen.tsx     # Results screen with ChartTabs
-│   │   └── YourDayPreviewScreen.tsx # Daily forecast shareable card
+│   │   ├── YourDayPreviewScreen.tsx # Daily forecast shareable card
+│   │   └── SoftGateScreen.tsx      # Account creation prompt
 │   └── types/
 │       └── webgl.d.ts
 ├── assets/

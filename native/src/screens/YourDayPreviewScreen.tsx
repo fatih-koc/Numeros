@@ -222,12 +222,7 @@ export function YourDayPreviewScreen() {
                   <Text
                     style={[
                       styles.dayNumber,
-                      {
-                        color: energyData.color,
-                        textShadowColor: energyData.glow,
-                        textShadowOffset: {width: 0, height: 0},
-                        textShadowRadius: 30,
-                      },
+                      {color: energyData.color, textShadowColor: energyData.glow},
                     ]}>
                     {universalDayNumber}
                   </Text>
@@ -257,12 +252,7 @@ export function YourDayPreviewScreen() {
                     <Text
                       style={[
                         styles.combinedNumber,
-                        {
-                          color: energyData.color,
-                          textShadowColor: energyData.glow,
-                          textShadowOffset: {width: 0, height: 0},
-                          textShadowRadius: 30,
-                        },
+                        {color: energyData.color, textShadowColor: energyData.glow},
                       ]}>
                       {universalDayNumber}
                     </Text>
@@ -394,6 +384,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: 72,
     fontWeight: '600',
+    textShadowOffset: {width: 0, height: 0},
+    textShadowRadius: 30,
     lineHeight: 80,
   },
   energyTitle: {
@@ -438,6 +430,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: 56,
     fontWeight: '600',
+    textShadowOffset: {width: 0, height: 0},
+    textShadowRadius: 30,
     lineHeight: 64,
   },
   combinedSymbol: {

@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 17,
-    fontWeight: '400',
     color: colors.textSecondary,
     fontFamily: fonts.serif,
   },
@@ -247,9 +246,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButtonText: {
-    fontFamily: fonts.mono,
+    fontFamily: fonts.monoSemiBold,
     fontSize: 15,
-    fontWeight: '600',
     letterSpacing: 3,
     color: colors.textSecondary,
   },

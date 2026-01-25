@@ -2,13 +2,17 @@
 // Fonts loaded at runtime via expo-font
 
 export const fonts = {
-  // Serif - Garamond Premier Pro (for titles, meanings, body text)
-  serif: 'GaramondPremrPro-Disp',
-  serifItalic: 'GaramondPremrPro-It',
+  // Serif - Cormorant Garamond (for body text, meanings, descriptions)
+  serif: 'CormorantGaramond-Regular',
+  serifItalic: 'CormorantGaramond-Italic',
+  serifLight: 'CormorantGaramond-Light',
+  serifLightItalic: 'CormorantGaramond-LightItalic',
 
-  // Monospace - Letter Gothic MT Std (for labels, buttons, technical text)
-  mono: 'LetterGothicMTStd',
-  monoItalic: 'LetterGothicMTStd-Oblique',
+  // Monospace - JetBrains Mono (for labels, buttons, technical text)
+  mono: 'JetBrainsMono-Regular',
+  monoItalic: 'JetBrainsMono-Italic',
+  monoMedium: 'JetBrainsMono-Medium',
+  monoSemiBold: 'JetBrainsMono-SemiBold',
 
   // Symbols - Astronomicon (for astrology glyphs)
   symbols: 'Astronomicon',
@@ -16,10 +20,19 @@ export const fonts = {
 
 // Font assets for runtime loading
 export const fontAssets = {
-  'GaramondPremrPro-Disp': require('../../assets/fonts/GaramondPremrPro-Disp.otf'),
-  'GaramondPremrPro-It': require('../../assets/fonts/GaramondPremrPro-It.otf'),
-  'LetterGothicMTStd': require('../../assets/fonts/LetterGothicMTStd.otf'),
-  'LetterGothicMTStd-Oblique': require('../../assets/fonts/LetterGothicMTStd-Oblique.otf'),
+  // Cormorant Garamond
+  'CormorantGaramond-Light': require('../../assets/fonts/CormorantGaramond-Light.ttf'),
+  'CormorantGaramond-LightItalic': require('../../assets/fonts/CormorantGaramond-LightItalic.ttf'),
+  'CormorantGaramond-Regular': require('../../assets/fonts/CormorantGaramond-Regular.ttf'),
+  'CormorantGaramond-Italic': require('../../assets/fonts/CormorantGaramond-Italic.ttf'),
+
+  // JetBrains Mono
+  'JetBrainsMono-Regular': require('../../assets/fonts/JetBrainsMono-Regular.ttf'),
+  'JetBrainsMono-Italic': require('../../assets/fonts/JetBrainsMono-Italic.ttf'),
+  'JetBrainsMono-Medium': require('../../assets/fonts/JetBrainsMono-Medium.ttf'),
+  'JetBrainsMono-SemiBold': require('../../assets/fonts/JetBrainsMono-SemiBold.ttf'),
+
+  // Astronomicon
   'Astronomicon': require('../../assets/fonts/Astronomicon.ttf'),
 }
 

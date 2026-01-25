@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 17,
-    fontWeight: '400',
     color: colors.textSecondary,
     fontFamily: fonts.serif,
   },

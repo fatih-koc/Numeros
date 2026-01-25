@@ -202,7 +202,6 @@ const styles = StyleSheet.create({
   sign: {
     fontSize: 17,
     color: colors.textSecondary,
-    fontWeight: '500',
     fontFamily: fonts.serif,
   },
   degree: {

@@ -448,12 +448,10 @@ const styles = StyleSheet.create({
   },
   numberInactive: {
     fontSize: 24,
-    fontWeight: '300',
     color: colors.textDim,
   },
   numberActive: {
     fontSize: 28,
-    fontWeight: '400',
     color: colors.textPrimary,
     textShadowColor: 'rgba(255, 255, 255, 0.6)',
     textShadowOffset: {width: 0, height: 0},
@@ -484,11 +482,10 @@ const styles = StyleSheet.create({
   },
   resultNumber: {
     fontSize: 62,
-    fontWeight: '300',
     color: colors.textPrimary,
     textShadowColor: 'rgba(139, 92, 246, 0.6)',
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 40,
-    fontFamily: fonts.serif,
+    fontFamily: fonts.serifLight,
   },
 })

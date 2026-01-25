@@ -527,8 +527,7 @@ const styles = StyleSheet.create({
   },
   frontNumber: {
     fontSize: 48,
-    fontWeight: '300',
-    fontFamily: fonts.serif,
+    fontFamily: fonts.serifLight,
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 30,
     marginBottom: 8,
@@ -580,8 +579,7 @@ const styles = StyleSheet.create({
   },
   backNumber: {
     fontSize: 82,
-    fontWeight: '300',
-    fontFamily: fonts.serif,
+    fontFamily: fonts.serifLight,
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 50,
     marginBottom: 24,

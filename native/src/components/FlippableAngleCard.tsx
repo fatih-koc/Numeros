@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   frontArrow: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: fonts.monoMedium,
   },
   frontLabel: {
     fontFamily: fonts.mono,
@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
   },
   frontSign: {
     fontSize: 22,
-    fontWeight: '500',
     fontFamily: fonts.serif,
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 15,

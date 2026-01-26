@@ -16,6 +16,7 @@ import Animated, {
   withSequence,
   Easing,
   useDerivedValue,
+  SharedValue,
 } from 'react-native-reanimated';
 
 // ============================================================================
@@ -191,14 +192,14 @@ const FRAGMENT_SHADER = `
 // ============================================================================
 
 interface BackgroundPanelProps {
-  hueDrift: Animated.SharedValue<number>;
+  hueDrift: SharedValue<number>;
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ hueDrift }) => {
   const glRef = useRef<any>(null);
   const programRef = useRef<any>(null);
   const uniformsRef = useRef<any>({});
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
 
   const onContextCreate = (gl: any) => {
     glRef.current = gl;
@@ -359,7 +360,7 @@ function setColorUniform(gl: any, location: any, color: { h: number; s: number; 
 // ============================================================================
 
 interface StatusOrbProps {
-  breathing: Animated.SharedValue<number>;
+  breathing: SharedValue<number>;
   statusText: string;
 }
 

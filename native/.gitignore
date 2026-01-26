@@ -175,4 +175,7 @@ fix_*.patch
 /private/react-native-fantom/tester/build/
 
 # [Experimental] Generated TS type definitions
-/packages/**/types_generated/
+/packages/**/types_generated/.expo/
+
+# Local Expo state
+.expo/

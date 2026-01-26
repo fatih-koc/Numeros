@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
   interpolateColor,
   Easing,
+  SharedValue,
 } from 'react-native-reanimated'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
@@ -192,7 +193,7 @@ export function InputForm({onSubmit}: InputFormProps) {
   const isStep2Valid = isValidDate(dateText) && isValidTime(timeText)
 
   // Animated input style creator
-  const createInputStyle = (focusValue: Animated.SharedValue<number>, focusColor = 'rgba(139, 92, 246, 0.5)') =>
+  const createInputStyle = (focusValue: SharedValue<number>, focusColor = 'rgba(139, 92, 246, 0.5)') =>
     useAnimatedStyle(() => ({
       borderColor: interpolateColor(
         focusValue.value,
@@ -214,11 +215,11 @@ export function InputForm({onSubmit}: InputFormProps) {
     transform: [{scale: buttonScale.value}],
   }))
 
-  const handleFocusIn = useCallback((focusValue: Animated.SharedValue<number>) => () => {
+  const handleFocusIn = useCallback((focusValue: SharedValue<number>) => () => {
     focusValue.value = withTiming(1, {duration: 300, easing: EASING})
   }, [])
 
-  const handleFocusOut = useCallback((focusValue: Animated.SharedValue<number>) => () => {
+  const handleFocusOut = useCallback((focusValue: SharedValue<number>) => () => {
     focusValue.value = withTiming(0, {duration: 300, easing: EASING})
   }, [])
 

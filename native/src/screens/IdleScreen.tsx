@@ -1,11 +1,11 @@
-import React, {useCallback, useEffect, useRef} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native'
 import {useNavigation, useFocusEffect} from '@react-navigation/native'
 import Animated, {
   FadeIn,
   useSharedValue,
   useAnimatedStyle,
-  useDerivedValue,
+  useAnimatedReaction,
   withRepeat,
   withSequence,
   withTiming,
@@ -74,6 +74,19 @@ export function IdleScreen() {
     colors.textSecondary, // Phase 4 - neutral
   ]
 
+  // Track current phase in JS state for shadow styling (avoids Reanimated native prop issues)
+  const [currentPhase, setCurrentPhase] = useState(-1)
+
+  useAnimatedReaction(
+    () => Math.floor(animationValues.currentPhase.value),
+    (phase, prevPhase) => {
+      if (phase !== prevPhase) {
+        runOnJS(setCurrentPhase)(phase)
+      }
+    },
+    [],
+  )
+
   const statusTextStyle = useAnimatedStyle(() => {
     const phase = animationValues.currentPhase.value
 
@@ -82,14 +95,8 @@ export function IdleScreen() {
       return {
         opacity: statusOpacity.value,
         color: colors.textSecondary,
-        textShadowColor: 'transparent',
-        textShadowOffset: {width: 0, height: 0},
-        textShadowRadius: 0,
       }
     }
-
-    // Clamp phase to valid range
-    const clampedPhase = Math.min(Math.max(Math.floor(phase), 0), 4)
 
     // Use interpolateColor for smooth transitions during extraction
     const color = interpolateColor(
@@ -98,17 +105,21 @@ export function IdleScreen() {
       phaseColors,
     )
 
-    // Text shadow glow for phases 0-3 (not for phase 4)
-    const shadowColor = clampedPhase < 4 ? phaseColors[clampedPhase] : 'transparent'
-
     return {
       opacity: statusOpacity.value,
       color,
-      textShadowColor: shadowColor,
-      textShadowOffset: {width: 0, height: 0},
-      textShadowRadius: clampedPhase < 4 ? 20 : 0,
     }
   })
+
+  // Static shadow style based on JS state (not animated) to avoid Reanimated/Fabric issues
+  const shadowStyle =
+    currentPhase >= 0 && currentPhase < 4
+      ? {
+          textShadowColor: phaseColors[currentPhase],
+          textShadowOffset: {width: 0, height: 0},
+          textShadowRadius: 20,
+        }
+      : undefined
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -221,7 +232,7 @@ export function IdleScreen() {
 
           <View style={styles.statusContainer}>
             <Text style={styles.statusLabel}>LOVE ENGINE</Text>
-            <Animated.Text style={[styles.statusText, statusTextStyle]}>
+            <Animated.Text style={[styles.statusText, statusTextStyle, shadowStyle]}>
               {statusText}
             </Animated.Text>
             <Text style={styles.subStatus}>{subStatus}</Text>

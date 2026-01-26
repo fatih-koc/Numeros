@@ -8,6 +8,9 @@ export type RootStackParamList = {
   YourDayPreview: undefined
   SoftGate: undefined
   ProfileSetup: undefined
+  Verification: undefined
+  UniverseScan: undefined
+  ResonanceResults: undefined
 }
 
 export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>

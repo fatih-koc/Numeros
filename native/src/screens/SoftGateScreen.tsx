@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Pressable,
   useWindowDimensions,
 } from 'react-native'
@@ -234,11 +233,7 @@ export function SoftGateScreen() {
   }
 
   const handleSkip = () => {
-    Alert.alert(
-      'Universe Scan',
-      'This would navigate to the universe scan where you can explore resonances without creating an account.',
-      [{text: 'OK'}],
-    )
+    navigation.navigate('UniverseScan')
   }
 
   return (

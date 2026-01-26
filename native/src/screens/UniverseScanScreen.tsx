@@ -1,6 +1,8 @@
-import React, {useState, useEffect, useCallback} from 'react'
-import {StyleSheet, View, Text, Alert} from 'react-native'
+import React, {useState, useEffect} from 'react'
+import {StyleSheet, View, Text} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import type {RootStackParamList} from '../navigation/types'
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -61,8 +63,10 @@ const ALL_PATTERNS = [...NUMEROLOGY_PATTERNS, ...ASTROLOGY_PATTERNS]
 
 const SCAN_DURATION = 12500 // 12.5 seconds
 
+type UniverseScanNavigationProp = NativeStackNavigationProp<RootStackParamList, 'UniverseScan'>
+
 export function UniverseScanScreen() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<UniverseScanNavigationProp>()
   const {scanOutput} = useNumerology()
 
   const [statusIndex, setStatusIndex] = useState(0)
@@ -115,15 +119,11 @@ export function UniverseScanScreen() {
   useEffect(() => {
     if (!scanOutput) return
     const completeTimeout = setTimeout(() => {
-      Alert.alert(
-        'Resonance Results',
-        'Scan complete! This would navigate to the results screen showing your top matches.',
-        [{text: 'OK'}],
-      )
+      navigation.navigate('ResonanceResults')
     }, SCAN_DURATION)
 
     return () => clearTimeout(completeTimeout)
-  }, [scanOutput])
+  }, [scanOutput, navigation])
 
   // Show last 4 feed items
   const visibleFeedItems = feedItems.slice(-4).reverse()

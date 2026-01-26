@@ -10,6 +10,8 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import {useNavigation} from '@react-navigation/native'
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import type {RootStackParamList} from '../navigation/types'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import {ScreenWrapper} from '../components/ScreenWrapper'
 import {colors} from '../lib/colors'
@@ -17,8 +19,10 @@ import {fonts} from '../lib/fonts'
 
 const BIO_MAX_LENGTH = 500
 
+type ProfileSetupNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfileSetup'>
+
 export function ProfileSetupScreen() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<ProfileSetupNavigationProp>()
   const {width: screenWidth} = useWindowDimensions()
   const [bio, setBio] = useState('')
   const [location, setLocation] = useState('')
@@ -29,11 +33,7 @@ export function ProfileSetupScreen() {
   const cellHeight = cellWidth * 1.33 // 4:3 aspect ratio
 
   const handleContinue = () => {
-    Alert.alert(
-      'Verification',
-      'This would navigate to the verification screen where you verify your email/phone.',
-      [{text: 'OK'}],
-    )
+    navigation.navigate('Verification')
   }
 
   const handlePhotoPress = (index: number) => {

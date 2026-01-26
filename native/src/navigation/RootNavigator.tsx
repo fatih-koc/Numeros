@@ -1,7 +1,7 @@
 import React from 'react'
 import {NavigationContainer} from '@react-navigation/native'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import {SplashScreen, IdleScreen, InputScreen, BlueprintScreen, YourDayPreviewScreen, SoftGateScreen, ProfileSetupScreen} from '../screens'
+import {SplashScreen, IdleScreen, InputScreen, BlueprintScreen, YourDayPreviewScreen, SoftGateScreen, ProfileSetupScreen, VerificationGateScreen, UniverseScanScreen, ResonanceResultsScreen} from '../screens'
 import type {RootStackParamList} from './types'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -24,6 +24,9 @@ export function RootNavigator() {
         <Stack.Screen name="YourDayPreview" component={YourDayPreviewScreen} />
         <Stack.Screen name="SoftGate" component={SoftGateScreen} />
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+        <Stack.Screen name="Verification" component={VerificationGateScreen} />
+        <Stack.Screen name="UniverseScan" component={UniverseScanScreen} />
+        <Stack.Screen name="ResonanceResults" component={ResonanceResultsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

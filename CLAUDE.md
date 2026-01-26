@@ -357,7 +357,7 @@ export const ZODIAC_COLORS: Record<string, string> = {
 ## Backend (Django)
 
 **Location:** `/apps/backend`
-**Framework:** Django 4.2+ with Django REST Framework
+**Framework:** Django 5+ with Django REST Framework
 **Database:** SQLite (dev) / PostgreSQL (prod)
 **Auth:** Token-based (DRF TokenAuthentication)
 

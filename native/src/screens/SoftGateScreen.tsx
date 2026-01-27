@@ -7,6 +7,7 @@ import {
   ScrollView,
   Pressable,
   useWindowDimensions,
+  Image,
 } from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
@@ -34,11 +35,11 @@ const NUMBER_COLORS = {
 
 interface ProfileCardProps {
   numbers: {life: number; soul: number; expression: number; personality: number}
-  placeholderColor: string
+  image: string
   size: number
 }
 
-function ProfileCard({numbers, placeholderColor, size}: ProfileCardProps) {
+function ProfileCard({numbers, image, size}: ProfileCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const rotation = useSharedValue(0)
 
@@ -123,13 +124,9 @@ function ProfileCard({numbers, placeholderColor, size}: ProfileCardProps) {
         </View>
       </Animated.View>
 
-      {/* Back - Placeholder */}
+      {/* Back - Profile Image */}
       <Animated.View style={[profileStyles.face, profileStyles.backFace, backAnimatedStyle]}>
-        <View style={[profileStyles.placeholder, {backgroundColor: `${placeholderColor}20`}]}>
-          <View style={[profileStyles.placeholderIcon, {backgroundColor: `${placeholderColor}40`}]}>
-            <Text style={[profileStyles.placeholderText, {color: placeholderColor}]}>?</Text>
-          </View>
-        </View>
+        <Image source={{uri: image}} style={profileStyles.profileImage} />
       </Animated.View>
     </Pressable>
   )
@@ -170,41 +167,29 @@ const profileStyles = StyleSheet.create({
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 30,
   },
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    fontFamily: fonts.serif,
-    fontSize: 32,
-    fontWeight: '500',
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 })
 
 const MOCK_PROFILES = [
   {
     numbers: {life: 7, soul: 2, expression: 9, personality: 4},
-    placeholderColor: '#6366F1',
+    image: 'https://images.unsplash.com/photo-1598420804087-aa8846ec60b6?w=400',
   },
   {
     numbers: {life: 3, soul: 6, expression: 5, personality: 8},
-    placeholderColor: '#F59E0B',
+    image: 'https://images.unsplash.com/photo-1652549752120-d9beb4c86bd4?w=400',
   },
   {
     numbers: {life: 5, soul: 1, expression: 7, personality: 3},
-    placeholderColor: '#10B981',
+    image: 'https://images.unsplash.com/photo-1631395774172-3d42655a3dc3?w=400',
   },
   {
     numbers: {life: 1, soul: 9, expression: 2, personality: 6},
-    placeholderColor: '#EC4899',
+    image: 'https://images.unsplash.com/photo-1598420804087-aa8846ec60b6?w=400',
   },
 ]
 
@@ -283,7 +268,7 @@ export function SoftGateScreen() {
             <Text style={styles.soulsTitle}>Souls Awaiting Resonance</Text>
             <View style={styles.profilesGrid}>
               {MOCK_PROFILES.map((profile, index) => (
-                <ProfileCard key={index} numbers={profile.numbers} placeholderColor={profile.placeholderColor} size={cardSize} />
+                <ProfileCard key={index} numbers={profile.numbers} image={profile.image} size={cardSize} />
               ))}
             </View>
           </View>

@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react'
+import React, {useState, useRef} from 'react'
 import {
   StyleSheet,
   View,
@@ -7,117 +7,60 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native'
-import Animated, {
-  FadeIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolateColor,
-  Easing,
-  SharedValue,
-} from 'react-native-reanimated'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
 import {lookupCity} from '../lib/cities'
 import type {UserInput} from '../lib/scanOutput'
 
-// easeInOutQuart matching Blueprint
-const EASING = Easing.bezier(0.77, 0, 0.175, 1)
-
 interface InputFormProps {
   onSubmit: (userInput: UserInput) => void
 }
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput)
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
+// Validation states
+type ValidationState = 'idle' | 'valid' | 'invalid'
 
-// Format date input as DD.MM.YYYY
-function formatDateInput(text: string, prevText: string): string {
-  // Remove non-numeric characters except dots
-  const cleaned = text.replace(/[^0-9.]/g, '')
+// Validate day (1-31)
+function isValidDay(day: string): boolean {
+  const num = parseInt(day, 10)
+  return !isNaN(num) && num >= 1 && num <= 31
+}
 
-  // If user is deleting, allow it
-  if (cleaned.length < prevText.length) {
-    return cleaned
-  }
+// Validate month (1-12)
+function isValidMonth(month: string): boolean {
+  const num = parseInt(month, 10)
+  return !isNaN(num) && num >= 1 && num <= 12
+}
 
-  // Remove all dots to work with pure numbers
-  const numbers = cleaned.replace(/\./g, '')
+// Validate year (1900 - current)
+function isValidYear(year: string): boolean {
+  const num = parseInt(year, 10)
+  return !isNaN(num) && num >= 1900 && num <= new Date().getFullYear()
+}
 
-  // Build formatted string
-  let formatted = ''
-  for (let i = 0; i < numbers.length && i < 8; i++) {
-    if (i === 2 || i === 4) {
-      formatted += '.'
-    }
-    formatted += numbers[i]
-  }
-
-  return formatted
+// Validate time string (HH:MM)
+function isValidTime(timeStr: string): boolean {
+  if (!timeStr || timeStr.length === 0) return true // Optional field
+  const parts = timeStr.split(':')
+  if (parts.length !== 2) return false
+  const hours = parseInt(parts[0], 10)
+  const minutes = parseInt(parts[1], 10)
+  if (isNaN(hours) || isNaN(minutes)) return false
+  if (hours < 0 || hours > 23) return false
+  if (minutes < 0 || minutes > 59) return false
+  return true
 }
 
 // Format time input as HH:MM
 function formatTimeInput(text: string, prevText: string): string {
-  // Remove non-numeric characters except colon
   const cleaned = text.replace(/[^0-9:]/g, '')
-
-  // If user is deleting, allow it
-  if (cleaned.length < prevText.length) {
-    return cleaned
-  }
-
-  // Remove all colons to work with pure numbers
+  if (cleaned.length < prevText.length) return cleaned
   const numbers = cleaned.replace(/:/g, '')
-
-  // Build formatted string
   let formatted = ''
   for (let i = 0; i < numbers.length && i < 4; i++) {
-    if (i === 2) {
-      formatted += ':'
-    }
+    if (i === 2) formatted += ':'
     formatted += numbers[i]
   }
-
   return formatted
-}
-
-// Parse DD.MM.YYYY to YYYY-MM-DD
-function parseDateString(dateStr: string): string | null {
-  const parts = dateStr.split('.')
-  if (parts.length !== 3) return null
-
-  const day = parseInt(parts[0], 10)
-  const month = parseInt(parts[1], 10)
-  const year = parseInt(parts[2], 10)
-
-  if (isNaN(day) || isNaN(month) || isNaN(year)) return null
-  if (day < 1 || day > 31) return null
-  if (month < 1 || month > 12) return null
-  if (year < 1900 || year > new Date().getFullYear()) return null
-
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-}
-
-// Validate date string
-function isValidDate(dateStr: string): boolean {
-  return parseDateString(dateStr) !== null
-}
-
-// Validate time string
-function isValidTime(timeStr: string): boolean {
-  if (!timeStr || timeStr.length === 0) return true // Optional field
-
-  const parts = timeStr.split(':')
-  if (parts.length !== 2) return false
-
-  const hours = parseInt(parts[0], 10)
-  const minutes = parseInt(parts[1], 10)
-
-  if (isNaN(hours) || isNaN(minutes)) return false
-  if (hours < 0 || hours > 23) return false
-  if (minutes < 0 || minutes > 59) return false
-
-  return true
 }
 
 export function InputForm({onSubmit}: InputFormProps) {
@@ -128,22 +71,83 @@ export function InputForm({onSubmit}: InputFormProps) {
   const [nameMiddle, setNameMiddle] = useState('')
   const [nameLast, setNameLast] = useState('')
 
-  // Step 2 fields - now strings
-  const [dateText, setDateText] = useState('')
+  // Step 2 fields - separate date inputs
+  const [day, setDay] = useState('')
+  const [month, setMonth] = useState('')
+  const [year, setYear] = useState('')
   const [timeText, setTimeText] = useState('')
   const [city, setCity] = useState('')
 
-  // Focus states
-  const firstFocus = useSharedValue(0)
-  const middleFocus = useSharedValue(0)
-  const lastFocus = useSharedValue(0)
-  const dateFocus = useSharedValue(0)
-  const timeFocus = useSharedValue(0)
-  const cityFocus = useSharedValue(0)
-  const buttonScale = useSharedValue(1)
+  // Validation states
+  const [dayValidation, setDayValidation] = useState<ValidationState>('idle')
+  const [monthValidation, setMonthValidation] = useState<ValidationState>('idle')
+  const [yearValidation, setYearValidation] = useState<ValidationState>('idle')
 
-  const handleDateTextChange = (text: string) => {
-    setDateText(formatDateInput(text, dateText))
+  // Accordion state
+  const [optionalExpanded, setOptionalExpanded] = useState(false)
+
+  // Focus states
+  const [firstFocused, setFirstFocused] = useState(false)
+  const [middleFocused, setMiddleFocused] = useState(false)
+  const [lastFocused, setLastFocused] = useState(false)
+  const [dayFocused, setDayFocused] = useState(false)
+  const [monthFocused, setMonthFocused] = useState(false)
+  const [yearFocused, setYearFocused] = useState(false)
+  const [timeFocused, setTimeFocused] = useState(false)
+  const [cityFocused, setCityFocused] = useState(false)
+
+  // Refs for auto-focus
+  const monthRef = useRef<TextInput>(null)
+  const yearRef = useRef<TextInput>(null)
+
+  // Handle day input
+  const handleDayChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2)
+    setDay(cleaned)
+
+    if (cleaned.length === 2) {
+      if (isValidDay(cleaned)) {
+        setDayValidation('valid')
+        monthRef.current?.focus()
+      } else {
+        setDayValidation('invalid')
+      }
+    } else if (cleaned.length === 0) {
+      setDayValidation('idle')
+    }
+  }
+
+  // Handle month input
+  const handleMonthChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2)
+    setMonth(cleaned)
+
+    if (cleaned.length === 2) {
+      if (isValidMonth(cleaned)) {
+        setMonthValidation('valid')
+        yearRef.current?.focus()
+      } else {
+        setMonthValidation('invalid')
+      }
+    } else if (cleaned.length === 0) {
+      setMonthValidation('idle')
+    }
+  }
+
+  // Handle year input
+  const handleYearChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 4)
+    setYear(cleaned)
+
+    if (cleaned.length === 4) {
+      if (isValidYear(cleaned)) {
+        setYearValidation('valid')
+      } else {
+        setYearValidation('invalid')
+      }
+    } else if (cleaned.length === 0) {
+      setYearValidation('idle')
+    }
   }
 
   const handleTimeTextChange = (text: string) => {
@@ -157,8 +161,9 @@ export function InputForm({onSubmit}: InputFormProps) {
   }
 
   const handleStep2Submit = () => {
-    const birthDate = parseDateString(dateText)
-    if (!birthDate) return
+    if (!isValidDay(day) || !isValidMonth(month) || !isValidYear(year)) return
+
+    const birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 
     let birth_place = null
     if (city.trim()) {
@@ -189,47 +194,24 @@ export function InputForm({onSubmit}: InputFormProps) {
     setStep(1)
   }
 
+  const toggleOptional = () => {
+    setOptionalExpanded(!optionalExpanded)
+  }
+
   const isStep1Valid = nameFirst.trim().length > 0 && nameLast.trim().length > 0
-  const isStep2Valid = isValidDate(dateText) && isValidTime(timeText)
+  const isStep2Valid =
+    dayValidation === 'valid' &&
+    monthValidation === 'valid' &&
+    yearValidation === 'valid' &&
+    isValidTime(timeText)
 
-  // Animated input style creator
-  const createInputStyle = (focusValue: SharedValue<number>, focusColor = 'rgba(139, 92, 246, 0.5)') =>
-    useAnimatedStyle(() => ({
-      borderColor: interpolateColor(
-        focusValue.value,
-        [0, 1],
-        ['rgba(255, 255, 255, 0.1)', focusColor]
-      ),
-      shadowOpacity: focusValue.value * 0.3,
-      shadowRadius: focusValue.value * 20,
-    }))
-
-  const firstInputStyle = createInputStyle(firstFocus)
-  const middleInputStyle = createInputStyle(middleFocus)
-  const lastInputStyle = createInputStyle(lastFocus)
-  const dateInputStyle = createInputStyle(dateFocus, 'rgba(236, 72, 153, 0.5)')
-  const timeInputStyle = createInputStyle(timeFocus, 'rgba(236, 72, 153, 0.5)')
-  const cityInputStyle = createInputStyle(cityFocus, 'rgba(236, 72, 153, 0.5)')
-
-  const buttonStyle = useAnimatedStyle(() => ({
-    transform: [{scale: buttonScale.value}],
-  }))
-
-  const handleFocusIn = useCallback((focusValue: SharedValue<number>) => () => {
-    focusValue.value = withTiming(1, {duration: 300, easing: EASING})
-  }, [])
-
-  const handleFocusOut = useCallback((focusValue: SharedValue<number>) => () => {
-    focusValue.value = withTiming(0, {duration: 300, easing: EASING})
-  }, [])
-
-  const handleButtonPressIn = useCallback(() => {
-    buttonScale.value = withTiming(0.98, {duration: 100})
-  }, [])
-
-  const handleButtonPressOut = useCallback(() => {
-    buttonScale.value = withTiming(1, {duration: 200, easing: EASING})
-  }, [])
+  // Get border style based on validation
+  const getInputStyle = (validation: ValidationState, focused: boolean) => {
+    if (validation === 'valid') return styles.inputValid
+    if (validation === 'invalid') return styles.inputInvalid
+    if (focused) return styles.inputFocused
+    return null
+  }
 
   return (
     <ScrollView
@@ -259,20 +241,19 @@ export function InputForm({onSubmit}: InputFormProps) {
 
       {/* Step 1: Name Fields */}
       {step === 1 && (
-        <Animated.View entering={FadeIn.duration(500)} style={styles.formContainer}>
+        <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>FIRST NAME</Text>
-            <AnimatedTextInput
-              style={[styles.input, firstInputStyle]}
+            <TextInput
+              style={[styles.input, firstFocused && styles.inputFocused]}
               placeholder="Given name"
               placeholderTextColor={colors.textDim}
               value={nameFirst}
               onChangeText={setNameFirst}
-              onFocus={handleFocusIn(firstFocus)}
-              onBlur={handleFocusOut(firstFocus)}
+              onFocus={() => setFirstFocused(true)}
+              onBlur={() => setFirstFocused(false)}
               autoCapitalize="words"
               autoCorrect={false}
-              autoFocus
             />
           </View>
 
@@ -281,14 +262,14 @@ export function InputForm({onSubmit}: InputFormProps) {
               <Text style={styles.label}>MIDDLE NAME</Text>
               <Text style={styles.labelOptional}>(Optional)</Text>
             </View>
-            <AnimatedTextInput
-              style={[styles.input, middleInputStyle]}
+            <TextInput
+              style={[styles.input, middleFocused && styles.inputFocused]}
               placeholder="Middle name(s)"
               placeholderTextColor={colors.textDim}
               value={nameMiddle}
               onChangeText={setNameMiddle}
-              onFocus={handleFocusIn(middleFocus)}
-              onBlur={handleFocusOut(middleFocus)}
+              onFocus={() => setMiddleFocused(true)}
+              onBlur={() => setMiddleFocused(false)}
               autoCapitalize="words"
               autoCorrect={false}
             />
@@ -296,112 +277,141 @@ export function InputForm({onSubmit}: InputFormProps) {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>LAST NAME</Text>
-            <AnimatedTextInput
-              style={[styles.input, lastInputStyle]}
+            <TextInput
+              style={[styles.input, lastFocused && styles.inputFocused]}
               placeholder="Family name"
               placeholderTextColor={colors.textDim}
               value={nameLast}
               onChangeText={setNameLast}
-              onFocus={handleFocusIn(lastFocus)}
-              onBlur={handleFocusOut(lastFocus)}
+              onFocus={() => setLastFocused(true)}
+              onBlur={() => setLastFocused(false)}
               autoCapitalize="words"
               autoCorrect={false}
             />
           </View>
 
-          <AnimatedPressable
-            style={[
-              styles.button,
-              styles.buttonPurple,
-              !isStep1Valid && styles.buttonDisabled,
-              buttonStyle,
-            ]}
+          <Pressable
+            style={[styles.button, styles.buttonPurple, !isStep1Valid && styles.buttonDisabled]}
             onPress={handleStep1Submit}
-            onPressIn={isStep1Valid ? handleButtonPressIn : undefined}
-            onPressOut={isStep1Valid ? handleButtonPressOut : undefined}
             disabled={!isStep1Valid}>
             <Text style={styles.buttonText}>CONTINUE</Text>
-          </AnimatedPressable>
-        </Animated.View>
+          </Pressable>
+        </View>
       )}
 
       {/* Step 2: Birth Data Fields */}
       {step === 2 && (
-        <Animated.View entering={FadeIn.duration(500)} style={styles.formContainer}>
+        <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>DATE OF BIRTH</Text>
-            <AnimatedTextInput
-              style={[styles.input, dateInputStyle]}
-              placeholder="DD.MM.YYYY"
-              placeholderTextColor={colors.textDim}
-              value={dateText}
-              onChangeText={handleDateTextChange}
-              onFocus={handleFocusIn(dateFocus)}
-              onBlur={handleFocusOut(dateFocus)}
-              keyboardType="numeric"
-              maxLength={10}
-              autoCorrect={false}
-            />
+            <View style={styles.dateRow}>
+              {/* Day Input */}
+              <TextInput
+                style={[styles.dateInput, styles.dateInputSmall, getInputStyle(dayValidation, dayFocused)]}
+                placeholder="DD"
+                placeholderTextColor={colors.textDim}
+                value={day}
+                onChangeText={handleDayChange}
+                onFocus={() => setDayFocused(true)}
+                onBlur={() => setDayFocused(false)}
+                keyboardType="number-pad"
+                maxLength={2}
+                textAlign="center"
+              />
+
+              <Text style={styles.dateSeparator}>/</Text>
+
+              {/* Month Input */}
+              <TextInput
+                ref={monthRef}
+                style={[styles.dateInput, styles.dateInputSmall, getInputStyle(monthValidation, monthFocused)]}
+                placeholder="MM"
+                placeholderTextColor={colors.textDim}
+                value={month}
+                onChangeText={handleMonthChange}
+                onFocus={() => setMonthFocused(true)}
+                onBlur={() => setMonthFocused(false)}
+                keyboardType="number-pad"
+                maxLength={2}
+                textAlign="center"
+              />
+
+              <Text style={styles.dateSeparator}>/</Text>
+
+              {/* Year Input */}
+              <TextInput
+                ref={yearRef}
+                style={[styles.dateInput, styles.dateInputLarge, getInputStyle(yearValidation, yearFocused)]}
+                placeholder="YYYY"
+                placeholderTextColor={colors.textDim}
+                value={year}
+                onChangeText={handleYearChange}
+                onFocus={() => setYearFocused(true)}
+                onBlur={() => setYearFocused(false)}
+                keyboardType="number-pad"
+                maxLength={4}
+                textAlign="center"
+              />
+            </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>BIRTH TIME</Text>
-              <Text style={styles.labelOptional}>(Optional)</Text>
-            </View>
-            <AnimatedTextInput
-              style={[styles.input, timeInputStyle]}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textDim}
-              value={timeText}
-              onChangeText={handleTimeTextChange}
-              onFocus={handleFocusIn(timeFocus)}
-              onBlur={handleFocusOut(timeFocus)}
-              keyboardType="numeric"
-              maxLength={5}
-              autoCorrect={false}
-            />
-          </View>
+          {/* Accordion Toggle */}
+          <Pressable style={styles.accordionToggle} onPress={toggleOptional}>
+            <Text style={styles.accordionText}>
+              {optionalExpanded ? 'Hide optional fields' : 'Add time & place (optional)'}
+            </Text>
+            <Text style={styles.chevron}>{optionalExpanded ? '▲' : '▼'}</Text>
+          </Pressable>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>BIRTH PLACE</Text>
-              <Text style={styles.labelOptional}>(Optional)</Text>
+          {/* Collapsible Optional Fields */}
+          {optionalExpanded && (
+            <View style={styles.optionalFields}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>BIRTH TIME</Text>
+                <TextInput
+                  style={[styles.input, timeFocused && styles.inputFocused]}
+                  placeholder="HH:MM (24h format)"
+                  placeholderTextColor={colors.textDim}
+                  value={timeText}
+                  onChangeText={handleTimeTextChange}
+                  onFocus={() => setTimeFocused(true)}
+                  onBlur={() => setTimeFocused(false)}
+                  keyboardType="numeric"
+                  maxLength={5}
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>BIRTH PLACE</Text>
+                <TextInput
+                  style={[styles.input, cityFocused && styles.inputFocused]}
+                  placeholder="e.g. London, New York, Tokyo"
+                  placeholderTextColor={colors.textDim}
+                  value={city}
+                  onChangeText={setCity}
+                  onFocus={() => setCityFocused(true)}
+                  onBlur={() => setCityFocused(false)}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+              </View>
             </View>
-            <AnimatedTextInput
-              style={[styles.input, cityInputStyle]}
-              placeholder="e.g. London, New York, Tokyo"
-              placeholderTextColor={colors.textDim}
-              value={city}
-              onChangeText={setCity}
-              onFocus={handleFocusIn(cityFocus)}
-              onBlur={handleFocusOut(cityFocus)}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-          </View>
+          )}
 
           <View style={styles.buttonRow}>
             <Pressable style={styles.backButton} onPress={handleBack}>
               <Text style={styles.backButtonText}>BACK</Text>
             </Pressable>
 
-            <AnimatedPressable
-              style={[
-                styles.button,
-                styles.buttonPink,
-                styles.buttonFlex,
-                !isStep2Valid && styles.buttonDisabled,
-                buttonStyle,
-              ]}
+            <Pressable
+              style={[styles.button, styles.buttonPink, styles.buttonFlex, !isStep2Valid && styles.buttonDisabled]}
               onPress={handleStep2Submit}
-              onPressIn={isStep2Valid ? handleButtonPressIn : undefined}
-              onPressOut={isStep2Valid ? handleButtonPressOut : undefined}
               disabled={!isStep2Valid}>
               <Text style={styles.buttonText}>CALCULATE</Text>
-            </AnimatedPressable>
+            </Pressable>
           </View>
-        </Animated.View>
+        </View>
       )}
     </ScrollView>
   )
@@ -507,10 +517,63 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: colors.textPrimary,
     fontFamily: fonts.serif,
-    shadowColor: '#8B5CF6',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0,
-    shadowRadius: 0,
+  },
+  inputFocused: {
+    borderColor: 'rgba(139, 92, 246, 0.5)',
+  },
+  inputValid: {
+    borderColor: 'rgba(16, 185, 129, 0.6)',
+  },
+  inputInvalid: {
+    borderColor: 'rgba(239, 68, 68, 0.6)',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dateInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 8,
+    paddingVertical: 16,
+    fontSize: 17,
+    color: colors.textPrimary,
+    fontFamily: fonts.serif,
+  },
+  dateInputSmall: {
+    width: 64,
+    paddingHorizontal: 8,
+  },
+  dateInputLarge: {
+    flex: 1,
+    paddingHorizontal: 12,
+  },
+  dateSeparator: {
+    fontFamily: fonts.mono,
+    fontSize: 20,
+    color: colors.textDim,
+  },
+  accordionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  accordionText: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.textDim,
+  },
+  chevron: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textDim,
+  },
+  optionalFields: {
+    gap: 20,
   },
   buttonRow: {
     flexDirection: 'row',

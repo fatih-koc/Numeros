@@ -70,6 +70,7 @@ export function EngineProvider({children}: EngineProviderProps) {
   const [idleButtonEnabled, setIdleButtonEnabled] = useState(false)
   const {setScanOutput} = useNumerology()
   const isRunningRef = useRef(false)
+  const onCompleteRef = useRef<(() => void) | null>(null)
 
   // Shared values for UI-thread animations
   const extractionProgress = useSharedValue(0)
@@ -95,8 +96,7 @@ export function EngineProvider({children}: EngineProviderProps) {
     }
   }, [])
 
-  const handleExtractionComplete = useCallback(
-    (onComplete: () => void) => {
+  const handleExtractionComplete = useCallback(() => {
       if (!extractionParams) return
 
       // Generate scan output
@@ -121,7 +121,9 @@ export function EngineProvider({children}: EngineProviderProps) {
       setTimeout(() => {
         setExtractionParams(null)
         isRunningRef.current = false
-        onComplete()
+        // Call the stored callback from ref
+        onCompleteRef.current?.()
+        onCompleteRef.current = null
       }, RESULT_DURATION)
     },
     [extractionParams, setScanOutput, resultScale, resultOpacity],
@@ -131,6 +133,9 @@ export function EngineProvider({children}: EngineProviderProps) {
     (onComplete: () => void) => {
       if (!extractionParams || isRunningRef.current) return
       isRunningRef.current = true
+
+      // Store callback in ref so it can be accessed from handleExtractionComplete
+      onCompleteRef.current = onComplete
 
       // Mark as calculating
       setEngineState(prev => ({...prev, isCalculating: true, showResult: false}))
@@ -192,7 +197,7 @@ export function EngineProvider({children}: EngineProviderProps) {
         withTiming(1, {duration: INTENSIFY_DURATION}, finished => {
           if (finished) {
             // Extraction complete, generate results
-            runOnJS(handleExtractionComplete)(onComplete)
+            runOnJS(handleExtractionComplete)()
           }
         }),
       )

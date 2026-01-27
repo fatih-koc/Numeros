@@ -1,11 +1,12 @@
-import React from 'react'
-import {StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions} from 'react-native'
+import React, {useState} from 'react'
+import {StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, Alert} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import type {RootStackParamList} from '../navigation/types'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import Svg, {Circle} from 'react-native-svg'
 import {ScreenWrapper} from '../components/ScreenWrapper'
+import {TimerGateModal} from '../components/TimerGateModal'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
 
@@ -148,10 +149,11 @@ const timerStyles = StyleSheet.create({
 interface MatchCardProps {
   match: Match
   onReveal: () => void
+  onShowModal: () => void
   cardWidth: number
 }
 
-function MatchCard({match, onReveal, cardWidth}: MatchCardProps) {
+function MatchCard({match, onReveal, onShowModal, cardWidth}: MatchCardProps) {
   const isReady = match.unlockTimeMs === 0
 
   return (
@@ -182,10 +184,10 @@ function MatchCard({match, onReveal, cardWidth}: MatchCardProps) {
               <Text style={cardStyles.revealButtonText}>REVEAL</Text>
             </TouchableOpacity>
           ) : (
-            <View style={cardStyles.timerContainer}>
+            <TouchableOpacity style={cardStyles.timerContainer} onPress={onShowModal} activeOpacity={0.7}>
               <TimerCircle timeMs={match.unlockTimeMs} />
               <Text style={cardStyles.timerText}>{formatTime(match.unlockTimeMs)}</Text>
-            </View>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -278,13 +280,33 @@ const cardStyles = StyleSheet.create({
 export function ResonanceResultsScreen() {
   const navigation = useNavigation<ResonanceNavigationProp>()
   const {width: screenWidth} = useWindowDimensions()
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
 
   const containerWidth = Math.min(screenWidth - 32, 390)
   const cardWidth = (containerWidth - 12) / 2
 
-  const handleReveal = (matchId: number) => {
-    // Would navigate to match detail or trigger reveal logic
-    console.log('Reveal match:', matchId)
+  const handleReveal = (match: Match) => {
+    // Navigate to HumanReveal with match data
+    navigation.navigate('HumanReveal', {
+      match: {
+        name: match.name,
+        age: match.age,
+        photoUrl: match.photoUrl,
+        matchPercentage: match.matchPercentage,
+      },
+    })
+  }
+
+  const handleShowModal = (match: Match) => {
+    setSelectedMatch(match)
+  }
+
+  const handleDismissModal = () => {
+    setSelectedMatch(null)
+  }
+
+  const handleSetReminder = () => {
+    Alert.alert('Reminder Set', `We'll notify you when ${selectedMatch?.name}'s profile is ready to view.`)
   }
 
   const handleContinue = () => {
@@ -305,7 +327,13 @@ export function ResonanceResultsScreen() {
           {/* Match Grid */}
           <View style={[styles.grid, {maxWidth: containerWidth}]}>
             {MOCK_MATCHES.map(match => (
-              <MatchCard key={match.id} match={match} onReveal={() => handleReveal(match.id)} cardWidth={cardWidth} />
+              <MatchCard
+                key={match.id}
+                match={match}
+                onReveal={() => handleReveal(match)}
+                onShowModal={() => handleShowModal(match)}
+                cardWidth={cardWidth}
+              />
             ))}
           </View>
 
@@ -315,6 +343,14 @@ export function ResonanceResultsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* Timer Gate Modal */}
+      <TimerGateModal
+        visible={selectedMatch !== null && selectedMatch.unlockTimeMs > 0}
+        unlockTimeMs={selectedMatch?.unlockTimeMs ?? 0}
+        onDismiss={handleDismissModal}
+        onSetReminder={handleSetReminder}
+      />
     </ScreenWrapper>
   )
 }

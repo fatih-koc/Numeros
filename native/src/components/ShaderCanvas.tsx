@@ -22,8 +22,18 @@ interface ShaderCanvasProps {
   isCalculating?: boolean
 }
 
+// Helper to safely create shader - returns null if compilation fails
+const safeShaderMake = (source: string) => {
+  try {
+    return Skia.RuntimeEffect.Make(source)
+  } catch (e) {
+    console.warn('Shader compilation failed:', e)
+    return null
+  }
+}
+
 // Skia GLSL shaders - adapted for Skia's shader language
-const flowingWavesSource = Skia.RuntimeEffect.Make(`
+const flowingWavesSource = safeShaderMake(`
 uniform float2 iResolution;
 uniform float iTime;
 
@@ -51,9 +61,9 @@ half4 main(float2 fragCoord) {
 
   return half4(col * edge, edge);
 }
-`)!
+`)
 
-const etherSource = Skia.RuntimeEffect.Make(`
+const etherSource = safeShaderMake(`
 uniform float2 iResolution;
 uniform float iTime;
 
@@ -103,9 +113,9 @@ half4 main(float2 fragCoord) {
 
   return half4(cl * edge, edge);
 }
-`)!
+`)
 
-const shootingStarsSource = Skia.RuntimeEffect.Make(`
+const shootingStarsSource = safeShaderMake(`
 uniform float2 iResolution;
 uniform float iTime;
 
@@ -149,9 +159,9 @@ half4 main(float2 fragCoord) {
   float edge = smoothstep(radius, radius - 8.0, dist);
   return half4(O.rgb * edge, edge);
 }
-`)!
+`)
 
-const wavyLinesSource = Skia.RuntimeEffect.Make(`
+const wavyLinesSource = safeShaderMake(`
 uniform float2 iResolution;
 uniform float iTime;
 
@@ -222,9 +232,9 @@ half4 main(float2 fragCoord) {
   float edge = smoothstep(radius, radius - 8.0, dist);
   return half4(finalColor * edge, edge);
 }
-`)!
+`)
 
-const plasmaEnergySource = Skia.RuntimeEffect.Make(`
+const plasmaEnergySource = safeShaderMake(`
 uniform float2 iResolution;
 uniform float iTime;
 
@@ -264,7 +274,7 @@ half4 main(float2 fragCoord) {
 
   return half4(col * edge, edge);
 }
-`)!
+`)
 
 export function ShaderCanvas({
   size,
@@ -318,40 +328,60 @@ export function ShaderCanvas({
   const shaderOpacity4 = useDerivedValue(() => currentShaderId.value === 4 ? 1 : 0)
   const shaderOpacity5 = useDerivedValue(() => currentShaderId.value >= 5 ? 1 : 0)
 
+  // If no shaders compiled successfully, render a fallback
+  const hasValidShaders = flowingWavesSource || etherSource || shootingStarsSource || wavyLinesSource || plasmaEnergySource
+
+  if (!hasValidShaders) {
+    // Fallback: just render an empty view with a purple tint
+    return (
+      <View style={[styles.container, styles.fallback, {width: size, height: size}]} />
+    )
+  }
+
   return (
     <View style={[styles.container, {width: size, height: size}]}>
       <Canvas style={{width: size, height: size}}>
         <Group clip={{x: 0, y: 0, width: size, height: size}}>
           {/* Shader 1: Flowing Waves */}
-          <Group opacity={shaderOpacity1}>
-            <Fill>
-              <Shader source={flowingWavesSource} uniforms={uniforms} />
-            </Fill>
-          </Group>
+          {flowingWavesSource && (
+            <Group opacity={shaderOpacity1}>
+              <Fill>
+                <Shader source={flowingWavesSource} uniforms={uniforms} />
+              </Fill>
+            </Group>
+          )}
           {/* Shader 2: Ether (default) */}
-          <Group opacity={shaderOpacity2}>
-            <Fill>
-              <Shader source={etherSource} uniforms={uniforms} />
-            </Fill>
-          </Group>
+          {etherSource && (
+            <Group opacity={shaderOpacity2}>
+              <Fill>
+                <Shader source={etherSource} uniforms={uniforms} />
+              </Fill>
+            </Group>
+          )}
           {/* Shader 3: Shooting Stars */}
-          <Group opacity={shaderOpacity3}>
-            <Fill>
-              <Shader source={shootingStarsSource} uniforms={uniforms} />
-            </Fill>
-          </Group>
+          {shootingStarsSource && (
+            <Group opacity={shaderOpacity3}>
+              <Fill>
+                <Shader source={shootingStarsSource} uniforms={uniforms} />
+              </Fill>
+            </Group>
+          )}
           {/* Shader 4: Wavy Lines */}
-          <Group opacity={shaderOpacity4}>
-            <Fill>
-              <Shader source={wavyLinesSource} uniforms={uniforms} />
-            </Fill>
-          </Group>
+          {wavyLinesSource && (
+            <Group opacity={shaderOpacity4}>
+              <Fill>
+                <Shader source={wavyLinesSource} uniforms={uniforms} />
+              </Fill>
+            </Group>
+          )}
           {/* Shader 5: Plasma Energy */}
-          <Group opacity={shaderOpacity5}>
-            <Fill>
-              <Shader source={plasmaEnergySource} uniforms={uniforms} />
-            </Fill>
-          </Group>
+          {plasmaEnergySource && (
+            <Group opacity={shaderOpacity5}>
+              <Fill>
+                <Shader source={plasmaEnergySource} uniforms={uniforms} />
+              </Fill>
+            </Group>
+          )}
         </Group>
       </Canvas>
     </View>
@@ -362,5 +392,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 1000,
     overflow: 'hidden',
+  },
+  fallback: {
+    backgroundColor: 'rgba(139, 92, 246, 0.3)',
   },
 })

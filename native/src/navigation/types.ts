@@ -7,6 +7,8 @@ export interface MatchParams {
   matchPercentage: number
 }
 
+export type TabId = 'your_day' | 'discover' | 'messages' | 'profile'
+
 export type RootStackParamList = {
   Splash: undefined
   Idle: undefined
@@ -19,6 +21,14 @@ export type RootStackParamList = {
   UniverseScan: undefined
   ResonanceResults: undefined
   HumanReveal: {match: MatchParams}
+  Main: {initialTab?: TabId}
+  FullProfile: {profileId: string}
+  MaybeLaterQueue: undefined
+  ResonateAction: {targetId: string; targetName: string}
+  MutualResonance: {matchId: string; matchName: string; matchPercentage: number}
+  Conversation: {conversationId: string; name: string; imageUrl: string}
+  ProfileEditor: undefined
+  Settings: undefined
 }
 
 export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>

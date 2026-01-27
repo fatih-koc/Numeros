@@ -95,6 +95,14 @@ function MoreVerticalIcon({size = 20, color = 'rgba(255, 255, 255, 0.9)'}: {size
   )
 }
 
+function ChevronRightIcon({size = 14, color = 'rgba(255, 255, 255, 0.5)'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M9 18l6-6-6-6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
 interface CompatibilityBar {
   label: string
   score: number
@@ -289,6 +297,11 @@ export function HumanRevealScreen() {
     navigation.goBack()
   }
 
+  const handleViewBreakdown = () => {
+    // Would navigate to full breakdown screen (premium feature)
+    Alert.alert('Full Breakdown', 'Detailed compatibility breakdown coming soon.')
+  }
+
   return (
     <View style={styles.container}>
       {/* Full Screen Photo */}
@@ -381,6 +394,10 @@ export function HumanRevealScreen() {
                   {person.matchPercentage}%
                 </Text>
                 <Text style={styles.matchLabel}>{person.matchLabel}</Text>
+                <Pressable style={styles.breakdownLink} onPress={handleViewBreakdown}>
+                  <Text style={styles.breakdownLinkText}>Full breakdown</Text>
+                  <ChevronRightIcon />
+                </Pressable>
               </View>
 
               {/* Right - Bars */}
@@ -611,6 +628,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  breakdownLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  breakdownLinkText: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   barsContainer: {
     flex: 1,

@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/v1/', include('apps.matching.urls')),
     path('api/v1/', include('apps.messaging.urls')),
     path('api/v1/forecast/', include('apps.numerology.urls')),
+    path('api/v1/marketing/', include('apps.marketing.urls')),
 ]

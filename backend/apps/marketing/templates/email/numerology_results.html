@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cosmic Numbers</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0c0a1d; font-family: Georgia, serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0c0a1d;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(180deg, #1a1533 0%, #0c0a1d 100%); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px;">
+                            <h1 style="color: #8B5CF6; margin: 0; font-size: 32px; font-weight: normal;">Numeros</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Greeting -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <p style="color: rgba(255,255,255,0.95); font-size: 18px; margin: 0;">
+                                Hello {{ name }},
+                            </p>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 16px; margin: 16px 0 0;">
+                                Your cosmic blueprint has been calculated. Here are your core numerology numbers:
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Numbers Grid -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="10">
+                                <tr>
+                                    <!-- Life Path -->
+                                    <td width="50%" style="background: rgba(99,102,241,0.15); border-radius: 12px; padding: 20px; text-align: center;">
+                                        <div style="color: #6366F1; font-size: 36px; font-weight: bold;">{{ life_path }}</div>
+                                        <div style="color: rgba(255,255,255,0.6); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Life Path</div>
+                                        <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 8px;">{{ life_path_meaning }}</div>
+                                    </td>
+                                    <!-- Soul Urge -->
+                                    <td width="50%" style="background: rgba(245,158,11,0.15); border-radius: 12px; padding: 20px; text-align: center;">
+                                        <div style="color: #F59E0B; font-size: 36px; font-weight: bold;">{{ soul_urge }}</div>
+                                        <div style="color: rgba(255,255,255,0.6); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Soul Urge</div>
+                                        <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 8px;">{{ soul_urge_meaning }}</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <!-- Expression -->
+                                    <td width="50%" style="background: rgba(16,185,129,0.15); border-radius: 12px; padding: 20px; text-align: center;">
+                                        <div style="color: #10B981; font-size: 36px; font-weight: bold;">{{ expression }}</div>
+                                        <div style="color: rgba(255,255,255,0.6); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Expression</div>
+                                        <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 8px;">{{ expression_meaning }}</div>
+                                    </td>
+                                    <!-- Personality -->
+                                    <td width="50%" style="background: rgba(244,114,182,0.15); border-radius: 12px; padding: 20px; text-align: center;">
+                                        <div style="color: #F472B6; font-size: 36px; font-weight: bold;">{{ personality }}</div>
+                                        <div style="color: rgba(255,255,255,0.6); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Personality</div>
+                                        <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 8px;">{{ personality_meaning }}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA -->
+                    <tr>
+                        <td align="center" style="padding: 0 40px 30px;">
+                            <p style="color: rgba(255,255,255,0.7); font-size: 16px; margin: 0 0 20px;">
+                                Discover your full cosmic profile and find your perfect match.
+                            </p>
+                            <a href="{{ app_store_url }}" style="display: inline-block; background: #8B5CF6; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; margin: 5px;">
+                                Download for iOS
+                            </a>
+                            <a href="{{ play_store_url }}" style="display: inline-block; background: #6366F1; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; margin: 5px;">
+                                Download for Android
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <p style="color: rgba(255,255,255,0.4); font-size: 12px; margin: 0; text-align: center;">
+                                2026 Numeros. All rights reserved.<br>
+                                <a href="{{ unsubscribe_url }}" style="color: rgba(255,255,255,0.4);">Unsubscribe</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

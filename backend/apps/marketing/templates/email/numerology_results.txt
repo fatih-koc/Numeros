@@ -1,0 +1,25 @@
+Hello {{ name }},
+
+Your cosmic blueprint has been calculated. Here are your core numerology numbers:
+
+LIFE PATH: {{ life_path }}
+{{ life_path_meaning }}
+
+SOUL URGE: {{ soul_urge }}
+{{ soul_urge_meaning }}
+
+EXPRESSION: {{ expression }}
+{{ expression_meaning }}
+
+PERSONALITY: {{ personality }}
+{{ personality_meaning }}
+
+---
+
+Discover your full cosmic profile and find your perfect match.
+Download the Numeros app: {{ app_store_url }}
+
+---
+
+2026 Numeros
+Unsubscribe: {{ unsubscribe_url }}

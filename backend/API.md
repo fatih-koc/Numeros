@@ -813,6 +813,67 @@ Authorization: Bearer <token>
 
 ---
 
+## Marketing Endpoints
+
+### Capture Lead
+```
+POST /marketing/capture/
+```
+
+Capture email lead and send numerology results. No authentication required.
+
+**Rate Limit:** 10 requests per minute per IP
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "name": "Jane Smith",
+  "birth_date": "1990-05-15",
+  "numerology": {
+    "life_path": 3,
+    "soul_urge": 7,
+    "expression": 5,
+    "personality": 9
+  },
+  "source": "calculator"  // "calculator" | "waitlist" | "download"
+}
+```
+
+**Response:** `201 Created` (new lead) or `200 OK` (updated existing)
+```json
+{
+  "success": true,
+  "message": "Your results have been sent to user@example.com",
+  "email_sent": true
+}
+```
+
+### Unsubscribe
+```
+POST /marketing/unsubscribe/
+```
+
+Unsubscribe from marketing emails. No authentication required.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "token": "optional_verification_token"  // From unsubscribe link
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "message": "You have been unsubscribed successfully"
+}
+```
+
+---
+
 ## Match Types
 
 | Type | Score Range | Description |

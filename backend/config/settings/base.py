@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.messaging',
     'apps.numerology',
     'apps.astrology',
+    'apps.marketing',
 ]
 
 MIDDLEWARE = [
@@ -125,3 +126,15 @@ SIMPLE_JWT = {
 
 # Swiss Ephemeris path
 EPHE_PATH = os.environ.get('EPHE_PATH', str(BASE_DIR / 'ephe'))
+
+# Amazon SES Settings
+AWS_SES_ENABLED = os.environ.get('AWS_SES_ENABLED', 'false').lower() == 'true'
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+AWS_SES_REGION = os.environ.get('AWS_SES_REGION', 'us-east-1')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'hello@numeros.app')
+
+# App URLs for email CTAs
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://numeros.app')
+APP_STORE_URL = os.environ.get('APP_STORE_URL', 'https://apps.apple.com/app/numeros')
+PLAY_STORE_URL = os.environ.get('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.numeros')

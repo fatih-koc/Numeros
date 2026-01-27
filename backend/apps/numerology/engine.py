@@ -282,6 +282,40 @@ def get_meaning(number_type: str, value: int) -> str:
     return 'The Seeker'
 
 
+# Short labels for email templates
+NUMBER_SHORT_LABELS = {
+    1: 'The Leader',
+    2: 'The Mediator',
+    3: 'The Communicator',
+    4: 'The Builder',
+    5: 'The Freedom Seeker',
+    6: 'The Nurturer',
+    7: 'The Seeker',
+    8: 'The Achiever',
+    9: 'The Humanitarian',
+    11: 'The Intuitive',
+    22: 'The Master Builder',
+    33: 'The Master Teacher',
+}
+
+
+def get_number_meaning(number: int, number_type: str = None) -> str:
+    """
+    Get short meaning label for a numerology number.
+    Used in email templates.
+
+    Args:
+        number: The numerology number
+        number_type: Optional type (unused, for API compatibility)
+
+    Returns:
+        Short meaning string
+    """
+    if number is None:
+        return ''
+    return NUMBER_SHORT_LABELS.get(number, NUMBER_SHORT_LABELS.get(number % 9 or 9, ''))
+
+
 def calculate_with_meanings(name: str, birth_date: str) -> Dict:
     """
     Calculate all numerology numbers with their meanings.

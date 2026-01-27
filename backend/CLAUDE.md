@@ -33,7 +33,8 @@ backend/
 │   ├── matching/       # Resonance, Match, scan, compatibility
 │   ├── messaging/      # Message, conversations
 │   ├── numerology/     # Engine, compatibility, forecast
-│   └── astrology/      # Engine (pyswisseph), synastry
+│   ├── astrology/      # Engine (pyswisseph), synastry
+│   └── marketing/      # MarketingLead, email capture, SES
 ├── core/               # Permissions, pagination
 ├── media/photos/       # Uploaded photos
 └── ephe/               # Swiss Ephemeris data
@@ -56,6 +57,7 @@ backend/
 **Matching:** `/api/v1/{scan,resonance,matches,resonances}/`
 **Messaging:** `/api/v1/{conversations,matches/{id}/messages}/`
 **Forecast:** `/api/v1/forecast/{today,week,{date}}/`
+**Marketing:** `/api/v1/marketing/{capture,unsubscribe}/`
 
 See `API.md` for full documentation.
 
@@ -70,6 +72,8 @@ See `API.md` for full documentation.
 **Message:** match, sender, content, read_at
 
 **Device:** user, platform (ios/android), token, notification preferences
+
+**MarketingLead:** email (unique), name, birth_date, numerology numbers, source, email_sent, subscribed
 
 ## Compatibility Scoring
 
@@ -159,4 +163,16 @@ SECRET_KEY=<secret>
 DATABASE_URL=postgres://...
 ALLOWED_HOSTS=api.numeros.app
 CORS_ALLOWED_ORIGINS=https://numeros.app
+
+# Amazon SES (for marketing emails)
+AWS_SES_ENABLED=true
+AWS_ACCESS_KEY_ID=<key>
+AWS_SECRET_ACCESS_KEY=<secret>
+AWS_SES_REGION=us-east-1
+DEFAULT_FROM_EMAIL=hello@numeros.app
+
+# App URLs (for email CTAs)
+FRONTEND_URL=https://numeros.app
+APP_STORE_URL=https://apps.apple.com/app/numeros
+PLAY_STORE_URL=https://play.google.com/store/apps/details?id=com.numeros
 ```

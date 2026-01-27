@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontFamily: fonts.serif,
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '400',
     color: colors.textSecondary,
     textAlign: 'center',

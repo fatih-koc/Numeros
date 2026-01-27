@@ -9,10 +9,44 @@ import Animated, {
   withSequence,
   FadeIn,
   FadeOut,
+  Keyframe,
 } from 'react-native-reanimated'
+
+const modalEntering = new Keyframe({
+  0: {opacity: 0, transform: [{scale: 0.95}]},
+  100: {opacity: 1, transform: [{scale: 1}]},
+}).duration(200)
+
+const modalExiting = new Keyframe({
+  0: {opacity: 1, transform: [{scale: 1}]},
+  100: {opacity: 0, transform: [{scale: 0.95}]},
+}).duration(200)
 import {LinearGradient} from 'expo-linear-gradient'
+import Svg, {Path} from 'react-native-svg'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
+
+// ShieldCheck icon (shield with checkmark) to match lucide-react ShieldCheck
+function ShieldCheckIcon({size = 16, color = 'rgba(255, 255, 255, 0.4)'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M9 12l2 2 4-4"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
 
 interface ProfileStatus {
   hasPhoto: boolean
@@ -57,11 +91,11 @@ export function AccountGateModal({
   return (
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+        <Animated.View entering={modalEntering} exiting={modalExiting}>
           <Pressable style={styles.modalContainer} onPress={e => e.stopPropagation()}>
             {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Feather name="x" size={28} color="rgba(255, 255, 255, 0.4)" />
+              <Feather name="x" size={32} color="rgba(255, 255, 255, 0.4)" />
             </TouchableOpacity>
 
             {/* Lock Icon with Glow */}
@@ -84,29 +118,39 @@ export function AccountGateModal({
             <View style={styles.checklist}>
               <ChecklistItem
                 label="Add a photo"
-                icon="camera"
+                icon={<Feather name="camera" size={16} color={profileStatus.hasPhoto ? 'white' : 'rgba(255, 255, 255, 0.4)'} />}
                 isComplete={profileStatus.hasPhoto}
               />
               <ChecklistItem
                 label="Write your bio"
-                icon="edit-2"
+                icon={<Feather name="edit-2" size={16} color={profileStatus.hasBio ? 'white' : 'rgba(255, 255, 255, 0.4)'} />}
                 isComplete={profileStatus.hasBio}
               />
               <ChecklistItem
                 label="Verify your identity"
-                icon="shield"
+                icon={<ShieldCheckIcon size={16} color={profileStatus.isVerified ? 'white' : 'rgba(255, 255, 255, 0.4)'} />}
                 isComplete={profileStatus.isVerified}
               />
             </View>
 
-            {/* Action Buttons */}
-            <TouchableOpacity style={styles.primaryButton} onPress={onCompleteProfile}>
+            {/* Action Buttons - Gradient border with dark inner */}
+            <TouchableOpacity style={styles.primaryButton} onPress={onCompleteProfile} activeOpacity={0.8}>
               <LinearGradient
                 colors={['#8B5CF6', '#EC4899']}
                 start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
-                style={styles.primaryButtonGradient}>
-                <Text style={styles.primaryButtonText}>COMPLETE PROFILE</Text>
+                end={{x: 1, y: 0}}
+                style={styles.primaryButtonBorder}>
+                {/* Gradient overlay at 20% opacity */}
+                <LinearGradient
+                  colors={['rgba(139, 92, 246, 0.2)', 'rgba(236, 72, 153, 0.2)']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 1, y: 0}}
+                  style={styles.primaryButtonOverlay}
+                />
+                {/* Inner dark background */}
+                <View style={styles.primaryButtonInner}>
+                  <Text style={styles.primaryButtonText}>COMPLETE PROFILE</Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -126,18 +170,14 @@ function ChecklistItem({
   isComplete,
 }: {
   label: string
-  icon: string
+  icon: React.ReactNode
   isComplete: boolean
 }) {
   return (
     <View style={styles.checklistItem}>
       <View style={styles.checklistLeft}>
         <View style={[styles.checklistIcon, isComplete && styles.checklistIconComplete]}>
-          <Feather
-            name={icon as any}
-            size={16}
-            color={isComplete ? 'white' : 'rgba(255, 255, 255, 0.4)'}
-          />
+          {icon}
         </View>
         <Text style={[styles.checklistLabel, isComplete && styles.checklistLabelComplete]}>
           {label}
@@ -233,9 +273,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   checklistIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -257,8 +297,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
   },
-  primaryButtonGradient: {
+  primaryButtonBorder: {
     flex: 1,
+    padding: 1,
+    borderRadius: 24,
+  },
+  primaryButtonOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 23,
+  },
+  primaryButtonInner: {
+    flex: 1,
+    backgroundColor: colors.bgMid,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -266,7 +317,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 14,
     fontWeight: '500',
-    color: 'white',
+    color: 'rgba(255, 255, 255, 0.95)',
     letterSpacing: 0.5,
   },
   secondaryButton: {

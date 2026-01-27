@@ -447,11 +447,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   numberInactive: {
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: '300',
     color: colors.textDim,
   },
   numberActive: {
-    fontSize: 28,
+    fontSize: 24,
+    fontWeight: '400',
     color: colors.textPrimary,
     textShadowColor: 'rgba(255, 255, 255, 0.6)',
     textShadowOffset: {width: 0, height: 0},
@@ -481,7 +483,8 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   resultNumber: {
-    fontSize: 62,
+    fontSize: 60,
+    fontWeight: '300',
     color: colors.textPrimary,
     textShadowColor: 'rgba(139, 92, 246, 0.6)',
     textShadowOffset: {width: 0, height: 0},

@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   insightLabel: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 12,
     color: '#FBBF24',
     letterSpacing: 1,
     marginBottom: 4,

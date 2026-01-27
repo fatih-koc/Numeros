@@ -342,45 +342,346 @@ export const ZODIAC_COLORS: Record<string, string> = {
 }
 ```
 
-### Still Missing / TODO
+### Still Missing / TODO (Native App)
 
-- [ ] API client integration with backend
-- [ ] Auth context with SecureStore
-- [ ] Scan screen (match discovery)
-- [ ] Profile screen
-- [ ] Resonance screen (likes/matches)
-- [ ] Push notifications
-- [ ] Offline mode / caching
+- [ ] API client integration with backend (use fetch or axios)
+- [ ] Auth context with SecureStore for JWT tokens
+- [ ] Scan screen (match discovery) - use `/api/v1/scan/`
+- [ ] Profile screen - use `/api/v1/profile/me/`
+- [ ] Resonance screen (likes/matches) - use `/api/v1/resonance/`, `/api/v1/matches/`
+- [ ] Chat screen - use `/api/v1/matches/{id}/messages/`
+- [ ] Push notifications - register device via `/api/v1/profile/devices/`
+- [ ] Daily forecast integration - use `/api/v1/forecast/today/`
+- [ ] Photo upload - use `/api/v1/profile/photos/`
+- [ ] Offline mode / caching with AsyncStorage
 
 ---
 
-## Backend (Django)
+## Backend (Django) - ✅ COMPLETE
 
 **Location:** `/apps/backend`
-**Framework:** Django 5+ with Django REST Framework
+**Framework:** Django 5.2 with Django REST Framework 3.15
 **Database:** SQLite (dev) / PostgreSQL (prod)
-**Auth:** Token-based (DRF TokenAuthentication)
+**Auth:** JWT via djangorestframework-simplejwt
+**Astrology:** pyswisseph (Swiss Ephemeris)
 
-### API Endpoints
+### Project Structure
 
-**Auth:**
-- `POST /api/auth/register` - Register with auto-calculated numerology
-- `POST /api/auth/login` - Returns token
-- `POST /api/auth/logout` - Deletes token
+```
+backend/
+├── manage.py
+├── pyproject.toml
+├── API.md                      # Full API documentation
+├── config/                     # Django settings
+│   ├── settings/
+│   │   ├── base.py            # Shared settings
+│   │   ├── development.py     # Dev settings (DEBUG=True)
+│   │   └── production.py      # Production settings
+│   ├── urls.py                # Main URL routing
+│   ├── wsgi.py
+│   └── asgi.py
+├── apps/
+│   ├── users/                 # User model, auth, profile, photos
+│   │   ├── models.py          # User, Device models
+│   │   ├── views.py           # Auth, Profile, Photo, Device views
+│   │   ├── serializers.py     # DRF serializers
+│   │   └── urls/
+│   │       ├── auth.py        # /api/v1/auth/*
+│   │       └── profile.py     # /api/v1/profile/*
+│   ├── matching/              # Resonance, Match, scan
+│   │   ├── models.py          # Resonance, Match
+│   │   ├── views.py           # Scan, Evaluate, Resonance, Match views
+│   │   ├── serializers.py     # API serializers
+│   │   ├── services.py        # Combined compatibility calculations
+│   │   └── urls.py            # /api/v1/scan/*, /api/v1/resonance/*, etc.
+│   ├── messaging/             # Chat messages
+│   │   ├── models.py          # Message
+│   │   ├── views.py           # Message list/send, Conversations
+│   │   ├── serializers.py
+│   │   └── urls.py            # /api/v1/conversations/*, /api/v1/matches/*/messages/*
+│   ├── numerology/            # Calculation engine
+│   │   ├── engine.py          # Core calculations (matches TypeScript!)
+│   │   ├── compatibility.py   # Harmony matrix
+│   │   ├── forecast.py        # Daily forecast calculations
+│   │   ├── views.py           # Forecast views
+│   │   └── urls.py            # /api/v1/forecast/*
+│   └── astrology/             # Swiss Ephemeris
+│       ├── engine.py          # Planet positions, houses
+│       ├── compatibility.py   # Synastry calculations
+│       └── urls.py
+├── core/                      # Shared utilities
+│   ├── permissions.py         # IsProfileComplete
+│   └── pagination.py
+├── media/                     # Uploaded photos
+│   └── photos/{user_id}/
+└── ephe/                      # Swiss Ephemeris data files
+```
 
-**Profile:**
-- `GET /api/profile/me` - Full user profile
-- `PUT /api/profile/me` - Update profile
-- `POST /api/profile/calculate` - Calculate numerology without account
+### API Endpoints (30+ endpoints)
 
-**Matching:**
-- `POST /api/match/scan` - Scan for matches
-- `POST /api/match/evaluate` - Evaluate specific user compatibility
+**Authentication** (`/api/v1/auth/`)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `register/` | POST | Create account with auto-calculated numerology/astrology |
+| `login/` | POST | Returns JWT access + refresh tokens |
+| `logout/` | POST | Blacklists refresh token |
+| `refresh/` | POST | Refresh access token |
 
-**Resonance:**
-- `POST /api/resonance/resonate` - Like a user
-- `POST /api/resonance/decline` - Decline a user
-- `GET /api/resonance/mutual` - Mutual matches only
+**Profile** (`/api/v1/profile/`)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `me/` | GET | Full user profile with numerology/astrology |
+| `me/` | PATCH | Update profile fields |
+| `calculate/` | POST | Anonymous calculation (onboarding) |
+| `photos/` | POST | Upload photo (multipart) |
+| `photos/delete/` | DELETE | Delete a photo |
+| `photos/reorder/` | PUT | Reorder photos |
+| `devices/` | POST | Register push notification device |
+| `devices/unregister/` | DELETE | Unregister device |
+| `devices/settings/` | PATCH | Update notification preferences |
+
+**Matching** (`/api/v1/`)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `scan/` | POST | Get candidates with compatibility scores |
+| `scan/evaluate/` | POST | Detailed compatibility for specific user |
+| `resonance/` | POST | Send like/decline/maybe_later |
+| `matches/` | GET | List mutual matches |
+| `matches/{id}/` | GET | Match detail with full compatibility |
+| `resonances/incoming/` | GET | People who liked you |
+| `resonances/maybe-later/` | GET | Maybe Later queue |
+| `resonances/maybe-later/{id}/convert/` | POST | Convert to like/decline |
+
+**Messaging** (`/api/v1/`)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `conversations/` | GET | List conversations with unread counts |
+| `matches/{id}/messages/` | GET | Get messages (auto-marks read) |
+| `matches/{id}/messages/send/` | POST | Send message |
+| `matches/{id}/messages/read/` | POST | Mark all as read |
+
+**Forecast** (`/api/v1/forecast/`)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `today/` | GET | Today's personalized forecast |
+| `week/` | GET | 7-day forecast |
+| `{date}/` | GET | Specific date (YYYY-MM-DD) |
+
+### Models
+
+**User** (`apps/users/models.py`)
+```python
+class User(AbstractUser):
+    email = EmailField(unique=True)  # LOGIN FIELD
+    display_name = CharField(max_length=100)
+    birth_date = DateField()
+    birth_time = TimeField(null=True)
+    birth_place = CharField(null=True)
+    birth_latitude = FloatField(null=True)
+    birth_longitude = FloatField(null=True)
+
+    # Numerology (calculated on create)
+    life_path = IntegerField()      # 1-9, 11, 22, 33
+    soul_urge = IntegerField()
+    expression = IntegerField()
+    personality = IntegerField()
+
+    # Astrology
+    sun_sign = CharField()
+    moon_sign = CharField(null=True)
+    rising_sign = CharField(null=True)
+    chart_level = IntegerField(default=1)  # 1-4
+    chart_data = JSONField(null=True)      # Full chart
+
+    # Profile
+    bio = TextField(blank=True)
+    photos = JSONField(default=list)
+    gender = CharField(null=True)
+    interested_in = JSONField(default=list)
+```
+
+**Resonance** (`apps/matching/models.py`)
+```python
+class Resonance(Model):
+    from_user = ForeignKey(User)
+    to_user = ForeignKey(User)
+    action = CharField()  # 'resonate', 'decline', 'maybe_later'
+    compatibility_score = IntegerField()
+    compatibility_data = JSONField()
+    expires_at = DateTimeField(null=True)  # 7 days for maybe_later
+```
+
+**Match** (`apps/matching/models.py`)
+```python
+class Match(Model):
+    user1 = ForeignKey(User)
+    user2 = ForeignKey(User)
+    compatibility_data = JSONField()
+    overall_score = IntegerField()
+    is_conversation_started = BooleanField()
+    last_message_at = DateTimeField(null=True)
+```
+
+**Message** (`apps/messaging/models.py`)
+```python
+class Message(Model):
+    match = ForeignKey(Match)
+    sender = ForeignKey(User)
+    content = TextField(max_length=2000)
+    read_at = DateTimeField(null=True)
+```
+
+**Device** (`apps/users/models.py`)
+```python
+class Device(Model):
+    user = ForeignKey(User)
+    platform = CharField()  # 'ios', 'android'
+    token = TextField()     # Push notification token
+    device_id = CharField(unique=True)
+    notifications_enabled = BooleanField()
+    match_notifications = BooleanField()
+    message_notifications = BooleanField()
+    forecast_notifications = BooleanField()
+```
+
+### Numerology Engine
+
+**Location:** `apps/numerology/engine.py`
+
+**CRITICAL:** Must match TypeScript implementation in `/apps/native/src/lib/numerology.ts`
+
+```python
+LETTER_VALUES = {
+    'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9,
+    'j': 1, 'k': 2, 'l': 3, 'm': 4, 'n': 5, 'o': 6, 'p': 7, 'q': 8, 'r': 9,
+    's': 1, 't': 2, 'u': 3, 'v': 4, 'w': 5, 'x': 6, 'y': 7, 'z': 8,
+}
+VOWELS = {'a', 'e', 'i', 'o', 'u'}
+MASTER_NUMBERS = {11, 22, 33}
+
+def reduce_to_single(num: int, preserve_master=True) -> int
+def calculate_life_path(date_str: str) -> int    # YYYY-MM-DD
+def calculate_soul_urge(name: str) -> int        # Vowels only
+def calculate_expression(name: str) -> int       # All letters
+def calculate_personality(name: str) -> int      # Consonants only
+def calculate_all(name: str, birth_date: str) -> dict
+```
+
+### Astrology Engine
+
+**Location:** `apps/astrology/engine.py`
+
+Uses pyswisseph (Swiss Ephemeris) for accurate planetary calculations.
+
+```python
+def datetime_to_julian(dt: datetime) -> float
+def get_sign_from_longitude(longitude: float) -> tuple[str, float]
+def calculate_planet_position(planet_id: int, jd: float) -> PlanetPosition
+def calculate_houses(jd: float, lat: float, lon: float) -> HouseData
+def calculate_full_chart(birth_date, birth_time, lat, lon) -> ChartData
+def serialize_chart(chart: ChartData) -> dict
+```
+
+**Chart Levels:**
+| Level | Data Required | Includes |
+|-------|---------------|----------|
+| 1 | Date only | Sun sign, approximate Moon |
+| 2 | Date + time | Precise Moon, all planets |
+| 3 | Date + location | (Uncommon) |
+| 4 | Date + time + location | Full chart with houses, Ascendant, MC |
+
+### Compatibility System
+
+**Location:** `apps/matching/services.py`
+
+Combined scoring: **60% numerology + 40% astrology**
+
+```python
+def calculate_full_compatibility(user1, user2) -> dict:
+    """Returns {
+        'overall_score': 0-100,
+        'match_type': str,
+        'match_description': str,
+        'numerology': {...},
+        'astrology': {...},
+        'highlights': list[str],
+    }"""
+```
+
+**Match Types:**
+| Type | Score Range | Description |
+|------|-------------|-------------|
+| `twin_flame` | 90-100 | Rare cosmic alignment |
+| `magnetic_stability` | 75-89 | Strong attraction + solid foundation |
+| `passionate_tension` | 60-74 | Dynamic energy, growth through challenges |
+| `gentle_growth` | 45-59 | Steady connection |
+| `karmic_lesson` | 0-44 | Learning opportunity |
+
+### Daily Forecast
+
+**Location:** `apps/numerology/forecast.py`
+
+```python
+def calculate_universal_day(target_date: date) -> int
+def calculate_personal_day(birth_date: date, target_date: date) -> int
+def get_daily_forecast(life_path: int, birth_date: date, target_date: date) -> dict
+```
+
+**Energy Data for Numbers 1-9:**
+- Theme (e.g., "New Beginnings", "Partnership")
+- Energy description
+- Color (hex) and glow color
+- Advice, love guidance, challenge
+- Harmony score based on life path alignment
+
+### Development Commands
+
+```bash
+cd backend
+
+# Install dependencies
+uv sync
+
+# Run migrations
+.venv/bin/python manage.py migrate
+
+# Start server
+.venv/bin/python manage.py runserver
+
+# Create superuser
+.venv/bin/python manage.py createsuperuser
+
+# Make migrations
+.venv/bin/python manage.py makemigrations
+
+# Run tests
+.venv/bin/python -m pytest
+
+# Django shell
+.venv/bin/python manage.py shell
+```
+
+### Environment Variables (Production)
+
+```bash
+DEBUG=False
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgres://user:pass@host:5432/numeros
+ALLOWED_HOSTS=api.numeros.app
+CORS_ALLOWED_ORIGINS=https://numeros.app
+```
+
+### Known Issues & Solutions
+
+**CursorPagination Error:**
+- Problem: `Cannot resolve keyword 'created' into field`
+- Cause: Default CursorPagination looks for `created` field
+- Solution: Changed to PageNumberPagination in `config/settings/base.py`
+
+**Swiss Ephemeris House Calculation:**
+- Problem: `tuple index out of range`
+- Cause: cusps is 12-element tuple starting at index 0, not 13-element starting at 1
+- Solution: Changed `range(1, 13)` to `range(12)` in house calculation
 
 ---
 
@@ -486,4 +787,55 @@ Use **react-native-svg** only for:
 
 ---
 
-*Last updated: 2026-01-24*
+*Last updated: 2026-01-27*
+
+---
+
+## Implementation Progress
+
+### ✅ Backend (Complete)
+- [x] Sprint 1: Auth, Profile, Numerology, Astrology engines
+- [x] Sprint 2: Matching, Resonance, Compatibility scoring
+- [x] Sprint 3: Messaging, Conversations, Read tracking
+- [x] Sprint 4: Photos, Daily Forecast, Push notification infrastructure
+
+### ✅ Native App - Prototype Conversion (Complete)
+
+**All 34 prototype components converted with visual parity.**
+
+**Components (19 files):**
+AccountGateModal, Background, Blueprint, ChartTabs, DiscoverTab, FlippableAngleCard, FlippablePlanetCard, InputForm, LoveEngine, MessagesTab, Particles, ProfileTab, ReEngagementModal, ScreenWrapper, ShaderCanvas, Stars, TimerGateModal, YourDayTab
+
+**Screens (21 files):**
+BlueprintScreen, ConversationViewScreen, FullProfileViewScreen, HumanRevealScreen, IdleScreen, InputScreen, MainShell, MaybeLaterQueueScreen, MutualResonanceScreen, ProfileEditorScreen, ProfileSetupScreen, ResonateActionScreen, ResonanceResultsScreen, SettingsScreen, SoftGateScreen, SplashScreen, UniverseScanScreen, VerificationGateScreen, YourDayPreviewScreen
+
+### Audit Fixes Applied (2026-01-27)
+
+| File | Property | Was | Fixed To |
+|------|----------|-----|----------|
+| Stars.tsx | levelIcon fontSize | 21 | 19 |
+| Stars.tsx | levelText fontSize | 14 | 11 |
+| Stars.tsx | sectionTitle fontSize | 14 | 10 |
+| Stars.tsx | completeText fontSize | 16 | 12 |
+| YourDayTab.tsx | dateHeader paddingTop | 20 | 60 |
+| SplashScreen.tsx | logoScale initial | 0.9 | 0.95 |
+| SplashScreen.tsx | statusText fontSize | 12 | 14 |
+| UniverseScanScreen.tsx | statusText fontSize | 20 | 21 |
+| FullProfileViewScreen.tsx | matchPercent fontSize | 40 | 36 |
+| ConversationViewScreen.tsx | insightLabel fontSize | 10 | 12 |
+| YourDayPreviewScreen.tsx | saveButtonText fontSize | 14 | 12 |
+| YourDayPreviewScreen.tsx | shareButtonText fontSize | 14 | 12 |
+
+### 🔄 Native App - Backend Integration (Not Started)
+- [ ] API client service with fetch/axios
+- [ ] Auth context with SecureStore for JWT
+- [ ] Connect screens to backend endpoints
+- [ ] Push notifications
+- [ ] Offline support with AsyncStorage
+
+### 📋 Remaining Work
+1. Create API client service in native app
+2. Implement auth context with SecureStore
+3. Connect existing screens to backend API
+4. Integrate push notifications
+5. Add offline support

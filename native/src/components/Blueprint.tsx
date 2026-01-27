@@ -518,12 +518,12 @@ const styles = StyleSheet.create({
   },
   frontLabel: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 10,  // 0.65rem = ~10px
+    letterSpacing: 2.5,  // 0.25em at 10px
     color: colors.textDim,
     textTransform: 'uppercase',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   frontNumber: {
     fontSize: 48,
@@ -533,10 +533,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   frontMeaning: {
-    fontSize: 16,
+    fontSize: 14,  // 0.85rem = ~14px
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 20,
     fontFamily: fonts.serif,
   },
   clickHint: {
@@ -563,16 +563,16 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 12,  // 0.75rem = ~12px
+    letterSpacing: 3,  // 0.25em at 12px
     textTransform: 'uppercase',
     textAlign: 'center',
     marginBottom: 8,
   },
   backSubtitle: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 2,
+    fontSize: 10,  // 0.6rem = ~10px
+    letterSpacing: 1,  // 0.1em at 10px
     color: colors.textDim,
     textAlign: 'center',
     marginBottom: 24,
@@ -605,16 +605,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   detailsText: {
-    fontSize: 16,
+    fontSize: 14,  // 0.9rem = ~14px
     color: colors.textSecondary,
-    lineHeight: 26,
+    lineHeight: 24,  // 1.7 * 14 = ~24
     fontStyle: 'italic',
     fontFamily: fonts.serif,
     textAlign: 'center',
   },
   resonanceText: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 14,  // 0.85rem = ~14px
+    lineHeight: 22,  // 1.6 * 14 = ~22
     fontFamily: fonts.serif,
     textAlign: 'center',
     maxWidth: '85%',

@@ -1,372 +1,174 @@
-# numEros Backend API
+# Numeros Backend API
 
-A Django-based REST API for the numEros dating application, featuring a deterministic multidimensional compatibility engine based on numerology and zodiac systems.
+Django REST API for the Numeros love/compatibility matching app using numerology and astrology calculations.
+
+## Quick Start
+
+```bash
+# Install dependencies
+uv sync
+
+# Run migrations
+.venv/bin/python manage.py migrate
+
+# Start development server
+.venv/bin/python manage.py runserver
+```
+
+## API Documentation
+
+See [API.md](./API.md) for complete endpoint documentation.
 
 ## Features
 
-- **5-Axis Compatibility Engine**: Evaluates relationships across Structure, Dynamics, Culture, Affinity, and Time axes
-- **Deterministic Calculations**: Same inputs always produce same outputs - no machine learning or randomness
-- **Complete Explainability**: Every compatibility score includes detailed rule traces
-- **Token-based Authentication**: Secure API access with Django REST Framework
-- **Auto-calculated Profiles**: Numerology and zodiac automatically computed on registration
-- **Intelligent Caching**: Compatibility scores cached for performance
-- **Mutual Matching**: Resonance system for likes and mutual matches (Eros activation)
+- **JWT Authentication** - Secure token-based auth with refresh tokens
+- **Numerology Engine** - Life Path, Soul Urge, Expression, Personality calculations
+- **Astrology Engine** - Swiss Ephemeris integration for accurate planetary positions
+- **Compatibility Scoring** - Combined numerology (60%) + astrology (40%) scoring
+- **Matching System** - Scan, resonance, and match creation
+- **Messaging** - Real-time chat with read receipts
+- **Daily Forecast** - Personalized numerology forecasts
+- **Photo Management** - Upload, reorder, delete profile photos
+- **Push Notifications** - Device registration for iOS/Android
 
-## Tech Stack
+## API Endpoints Overview
 
-- Python 3.14
-- Django 6.0
-- Django REST Framework
-- SQLite (development) / PostgreSQL (production recommended)
-- Token Authentication
+### Authentication
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/register/` | POST | Register new user |
+| `/api/v1/auth/login/` | POST | Login (returns JWT) |
+| `/api/v1/auth/logout/` | POST | Logout (blacklist token) |
+| `/api/v1/auth/refresh/` | POST | Refresh access token |
+
+### Profile
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/profile/me/` | GET | Get current user profile |
+| `/api/v1/profile/me/` | PATCH | Update profile |
+| `/api/v1/profile/calculate/` | POST | Calculate without account |
+| `/api/v1/profile/photos/` | POST | Upload photo |
+| `/api/v1/profile/devices/` | POST | Register push device |
+
+### Matching
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/scan/` | POST | Scan for matches |
+| `/api/v1/scan/evaluate/` | POST | Detailed compatibility |
+| `/api/v1/resonance/` | POST | Like/decline/maybe_later |
+| `/api/v1/matches/` | GET | List matches |
+| `/api/v1/resonances/incoming/` | GET | Who liked you |
+
+### Messaging
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/conversations/` | GET | List conversations |
+| `/api/v1/matches/{id}/messages/` | GET | Get messages |
+| `/api/v1/matches/{id}/messages/send/` | POST | Send message |
+
+### Forecast
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/forecast/today/` | GET | Today's forecast |
+| `/api/v1/forecast/week/` | GET | 7-day forecast |
+| `/api/v1/forecast/{date}/` | GET | Specific date |
 
 ## Project Structure
 
 ```
-apps/backend/
-├── matching/
-│   ├── numerology.py          # Numerology calculation service
-│   ├── zodiac.py              # Zodiac calculation service
-│   ├── compatibility.py       # 5-axis compatibility engine
-│   ├── models.py              # CompatibilityCache, Resonance models
-│   ├── serializers.py         # API serializers
-│   ├── views.py               # API views
-│   ├── urls.py                # URL routing
-│   └── admin.py               # Django admin configuration
-├── users/
-│   ├── models.py              # Custom User model
-│   ├── serializers.py         # User serializers
-│   ├── views.py               # Authentication & profile views
-│   ├── urls.py                # URL routing
-│   └── admin.py               # Django admin configuration
-├── numeros/
-│   ├── settings.py            # Django settings
-│   └── urls.py                # Main URL configuration
-├── API.md                     # Complete API documentation
-├── IMPLEMENTATION.md          # Implementation details
-└── README.md                  # This file
+backend/
+├── manage.py
+├── pyproject.toml
+├── API.md                    # Full API documentation
+├── config/                   # Django settings
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── apps/
+│   ├── users/                # User model, auth, profile, photos
+│   ├── matching/             # Resonance, Match, scan, compatibility
+│   ├── messaging/            # Messages, conversations
+│   ├── numerology/           # Calculation engine, forecast
+│   └── astrology/            # Swiss Ephemeris calculations
+├── core/                     # Shared utilities
+│   ├── permissions.py
+│   └── pagination.py
+├── media/                    # Uploaded files
+│   └── photos/
+└── ephe/                     # Swiss Ephemeris data files
 ```
 
-## Setup
+## Chart Levels
 
-### 1. Activate Virtual Environment
+| Level | Data Required | Includes |
+|-------|---------------|----------|
+| 1 | Date only | Sun sign, approximate Moon |
+| 2 | Date + time | Precise Moon, all planets |
+| 3 | Date + location | (Not commonly used) |
+| 4 | Date + time + location | Full chart with houses, Ascendant, MC |
+
+## Match Types
+
+| Type | Score | Description |
+|------|-------|-------------|
+| twin_flame | 90-100 | Rare cosmic alignment |
+| magnetic_stability | 75-89 | Strong attraction + solid foundation |
+| passionate_tension | 60-74 | Dynamic energy, growth through challenges |
+| gentle_growth | 45-59 | Steady connection |
+| karmic_lesson | 0-44 | Learning opportunity |
+
+## Swiss Ephemeris
+
+For accurate astrology calculations, download ephemeris files:
 
 ```bash
-cd apps/backend
-source .venv/bin/activate
+cd ephe
+wget https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1
+wget https://www.astro.com/ftp/swisseph/ephe/semo_18.se1
 ```
 
-### 2. Install Dependencies
-
-Dependencies are already installed in `.venv`, but if needed:
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Run Migrations
-
-```bash
-python manage.py migrate
-```
-
-### 4. Create Superuser (Optional)
-
-```bash
-python manage.py createsuperuser
-```
-
-### 5. Run Development Server
-
-```bash
-python manage.py runserver
-```
-
-The API will be available at `http://localhost:8000/api`
-
-## Quick Start
-
-### 1. Register a User
-
-```bash
-curl -X POST http://localhost:8000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "SecurePass123!",
-    "password_confirm": "SecurePass123!",
-    "name": "John Doe",
-    "birth_date": "1990-05-15",
-    "gender": "male",
-    "seeking": "female"
-  }'
-```
-
-Response includes your authentication token and complete profile with calculated numerology and zodiac.
-
-### 2. Get Your Profile
-
-```bash
-curl http://localhost:8000/api/profile/me \
-  -H "Authorization: Token YOUR_TOKEN_HERE"
-```
-
-### 3. Scan for Matches
-
-```bash
-curl -X POST http://localhost:8000/api/match/scan \
-  -H "Authorization: Token YOUR_TOKEN_HERE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "limit": 20,
-    "min_score": 60
-  }'
-```
-
-## API Endpoints
-
-See [API.md](./API.md) for complete documentation.
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-
-### Profile
-- `GET /api/profile/me` - Get current user profile
-- `PUT/PATCH /api/profile/me` - Update profile
-- `POST /api/profile/calculate` - Calculate numerology (no auth required)
-- `GET /api/profile/blueprint` - Get detailed numerology blueprint
-
-### Matching
-- `POST /api/match/scan` - Scan for compatible matches
-- `POST /api/match/evaluate` - Evaluate compatibility with specific user
-- `GET /api/match/candidates` - Get cached match candidates
-
-### Resonance
-- `POST /api/resonance/resonate` - Like/resonate with a user
-- `POST /api/resonance/decline` - Decline a user
-- `GET /api/resonance/all` - List all resonances
-- `GET /api/resonance/mutual` - Get mutual matches only
-
-## Compatibility System
-
-### 5 Axes
-
-1. **Structure** (Numerology heavy): Long-term stability based on life path, day, and month numbers
-2. **Dynamics** (Directional): Power balance and role dynamics (asymmetric: A→B ≠ B→A)
-3. **Culture** (Zodiac): Cultural compatibility based on Chinese/Turkish zodiac
-4. **Affinity** (Auxiliary): Additional factors (Phase 2)
-5. **Time** (Cycle alignment): Temporal compatibility based on life cycles
-
-### Match Types
-
-- **Twin Flame**: Cosmic alignment with rare number mirroring (85-100)
-- **Magnetic Stability**: Strong attraction with emotional safety (75-84)
-- **Passionate Tension**: High chemistry with growth edges (70-84)
-- **Gentle Growth**: Nurturing connection that deepens (50-69)
-- **Karmic Lesson**: Teaches through contrast (30-49)
-- **Incompatible**: Fundamental incompatibilities (<30)
-
-### Example Output
-
-```json
-{
-  "axes": {
-    "structure": 45,
-    "dynamics": 0,
-    "culture": 20,
-    "affinity": 0,
-    "time": -2
-  },
-  "total_score": 63,
-  "dominant_axis": "structure",
-  "labels": {
-    "match_type": "gentle_growth",
-    "risk_level": "medium",
-    "headline": "Gentle Growth",
-    "description": "A nurturing connection that deepens over time",
-    "longevity_forecast": "Can last with mutual effort"
-  },
-  "rule_trace": [
-    {
-      "rule": "Life Path Compatibility",
-      "triggered": true,
-      "impact": 45,
-      "explanation": "Life paths 3 and 5 are compatible"
-    },
-    ...
-  ]
-}
-```
-
-## Testing
-
-### Run All Tests
-
-```bash
-python manage.py test
-```
-
-### Test Compatibility Engine
-
-```bash
-python test_compatibility.py
-```
-
-### Access Django Admin
-
-1. Create superuser: `python manage.py createsuperuser`
-2. Run server: `python manage.py runserver`
-3. Visit: `http://localhost:8000/admin`
-
-## Database Schema
-
-### Users
-- Custom user model with email authentication
-- Precomputed numerology (life_path, day_number, month_number, etc.)
-- Precomputed zodiac (animal, element, position)
-- Gender preferences
-- Location (optional)
-
-### CompatibilityCache
-- Stores precomputed 5-axis compatibility scores
-- Match type and risk level classification
-- Computed per year (cycle numbers change annually)
-- Indexed for fast querying
-
-### Resonance
-- Tracks user likes/resonances
-- Mutual match detection (Eros activation)
-- Status tracking (pending, mutual, declined, expired)
-- Compatibility snapshot at creation
-
-## Key Design Principles
-
-1. **Deterministic**: No randomness, always reproducible
-2. **Explainable**: Every score includes rule traces
-3. **Separation of Concerns**: Services, models, and API clearly separated
-4. **Performance**: Precomputation and caching for speed
-5. **Extensibility**: Easy to add new factors or axes
-6. **Type Safety**: Using dataclasses and enums for clarity
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file based on `.env.example`:
-
-```env
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8081
-```
-
-### Production Considerations
-
-For production deployment:
-
-1. Set `DEBUG=False`
-2. Use PostgreSQL instead of SQLite
-3. Configure proper `ALLOWED_HOSTS`
-4. Use environment variables for secrets
-5. Enable HTTPS
-6. Configure proper CORS origins
-7. Add rate limiting
-8. Set up Redis for caching
-9. Use Celery for background tasks
-
-## Documentation
-
-- **[API.md](./API.md)**: Complete API documentation with examples
-- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)**: Implementation details and architecture
-- **[Technical Specification.md](../../_project/Technical%20Specification.md)**: Formal mathematical specification
+The API works without these files using fallback calculations.
 
 ## Development
 
-### Code Style
-
-- Follow PEP 8
-- Use type hints
-- Write docstrings for all functions
-- Keep functions focused and testable
-
-### Adding New Endpoints
-
-1. Create serializer in `serializers.py`
-2. Create view in `views.py`
-3. Add URL in `urls.py`
-4. Update `API.md` documentation
-5. Write tests
-
-### Debugging
-
-Enable debug toolbar:
-
-```python
-# settings.py
-INSTALLED_APPS += ['debug_toolbar']
-MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-INTERNAL_IPS = ['127.0.0.1']
-```
-
-## Troubleshooting
-
-### Authentication Issues
-
-Ensure token is included in header:
-```
-Authorization: Token YOUR_TOKEN_HERE
-```
-
-### CORS Issues
-
-Check `CORS_ALLOWED_ORIGINS` in `settings.py`
-
-### Migration Issues
-
-Reset database (development only):
 ```bash
-rm db.sqlite3
-python manage.py migrate
+# Run tests
+.venv/bin/python -m pytest
+
+# Create superuser
+.venv/bin/python manage.py createsuperuser
+
+# Check for issues
+.venv/bin/python manage.py check
+
+# Make migrations
+.venv/bin/python manage.py makemigrations
+
+# Shell
+.venv/bin/python manage.py shell
 ```
 
-## Contributing
+## Environment Variables
 
-1. Create feature branch
-2. Make changes
-3. Write/update tests
-4. Update documentation
-5. Submit pull request
+Create `.env` for production:
 
-## License
+```bash
+DEBUG=False
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgres://user:pass@host:5432/numeros
+ALLOWED_HOSTS=api.numeros.app
+CORS_ALLOWED_ORIGINS=https://numeros.app
+```
 
-Proprietary - All rights reserved
+## Tech Stack
 
-## Contact
-
-For questions or support, contact the development team.
-
----
-
-## MVP Status
-
-✅ Complete and functional:
-- User registration and authentication
-- Numerology and zodiac calculations
-- 5-axis compatibility engine
-- Match scanning and evaluation
-- Resonance system (likes and mutual matches)
-- Admin panel
-- API documentation
-
-🚧 Phase 2 (Planned):
-- Affinity axis with auxiliary factors
-- Chat functionality
-- Real-time notifications (WebSockets)
-- Advanced caching (Redis)
-- Background task processing (Celery)
-- Location-based filtering
-- Analytics and insights
+- **Django 5.2** - Web framework
+- **Django REST Framework** - API toolkit
+- **SimpleJWT** - JWT authentication
+- **pyswisseph** - Swiss Ephemeris bindings
+- **PostgreSQL** - Production database (SQLite for dev)
+- **uv** - Package manager

@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 12,
     letterSpacing: 3,
     color: 'rgba(255, 255, 255, 0.7)',
     textTransform: 'uppercase',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 12,
     letterSpacing: 3,
     color: colors.textPrimary,
     textTransform: 'uppercase',

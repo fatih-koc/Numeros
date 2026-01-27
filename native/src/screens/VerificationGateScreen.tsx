@@ -12,8 +12,16 @@ import {
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import type {RootStackParamList} from '../navigation/types'
-import Animated, {FadeIn} from 'react-native-reanimated'
-import Svg, {Line, Text as SvgText, Path, Circle, Rect} from 'react-native-svg'
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedProps,
+  withRepeat,
+  withTiming,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated'
+import Svg, {Line, Text as SvgText, Path, Circle, Rect, Defs, Filter, FeGaussianBlur, G} from 'react-native-svg'
 import {ScreenWrapper} from '../components/ScreenWrapper'
 import {useNumerology} from '../contexts'
 import {colors} from '../lib/colors'
@@ -23,6 +31,8 @@ type VerificationStep = 'initial' | 'phone_input' | 'email_input' | 'otp'
 type ValidationStatus = 'idle' | 'valid' | 'invalid'
 
 type VerificationNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Verification'>
+
+const AnimatedLine = Animated.createAnimatedComponent(Line)
 
 const PLANET_SYMBOLS = ['Q', 'R', 'S', 'T', 'U', 'V', 'W'] // Astronomicon font
 const PLANET_COLORS = [
@@ -59,6 +69,48 @@ export function VerificationGateScreen() {
   const [resendCountdown, setResendCountdown] = useState(0)
 
   const inputRefs = useRef<(TextInput | null)[]>([])
+
+  // Pulsing line animations
+  const line1Opacity = useSharedValue(0.3)
+  const line2Opacity = useSharedValue(0.3)
+  const line3Opacity = useSharedValue(0.3)
+  const line4Opacity = useSharedValue(0.3)
+
+  useEffect(() => {
+    const duration = 2000
+    const easing = Easing.inOut(Easing.ease)
+
+    line1Opacity.value = withRepeat(
+      withTiming(0.6, {duration, easing}),
+      -1,
+      true
+    )
+    line2Opacity.value = withDelay(
+      500,
+      withRepeat(withTiming(0.6, {duration, easing}), -1, true)
+    )
+    line3Opacity.value = withDelay(
+      1000,
+      withRepeat(withTiming(0.6, {duration, easing}), -1, true)
+    )
+    line4Opacity.value = withDelay(
+      1500,
+      withRepeat(withTiming(0.6, {duration, easing}), -1, true)
+    )
+  }, [line1Opacity, line2Opacity, line3Opacity, line4Opacity])
+
+  const line1Props = useAnimatedProps(() => ({
+    opacity: line1Opacity.value,
+  }))
+  const line2Props = useAnimatedProps(() => ({
+    opacity: line2Opacity.value,
+  }))
+  const line3Props = useAnimatedProps(() => ({
+    opacity: line3Opacity.value,
+  }))
+  const line4Props = useAnimatedProps(() => ({
+    opacity: line4Opacity.value,
+  }))
 
   // Redirect if no scan data
   useEffect(() => {
@@ -191,11 +243,43 @@ export function VerificationGateScreen() {
           {/* Love Matrix Visual */}
           <View style={styles.matrixContainer}>
             <Svg width={280} height={280} viewBox="0 0 280 280" style={styles.matrixSvg}>
-              {/* Connecting Lines from center to corners */}
-              <Line x1={140} y1={140} x2={20} y2={20} stroke="rgba(139, 92, 246, 0.3)" strokeWidth={1} />
-              <Line x1={140} y1={140} x2={260} y2={20} stroke="rgba(139, 92, 246, 0.3)" strokeWidth={1} />
-              <Line x1={140} y1={140} x2={20} y2={260} stroke="rgba(139, 92, 246, 0.3)" strokeWidth={1} />
-              <Line x1={140} y1={140} x2={260} y2={260} stroke="rgba(139, 92, 246, 0.3)" strokeWidth={1} />
+              {/* Connecting Lines from center to corners with pulse animation */}
+              <AnimatedLine
+                x1={140}
+                y1={140}
+                x2={20}
+                y2={20}
+                stroke="rgba(139, 92, 246, 1)"
+                strokeWidth={1}
+                animatedProps={line1Props}
+              />
+              <AnimatedLine
+                x1={140}
+                y1={140}
+                x2={260}
+                y2={20}
+                stroke="rgba(139, 92, 246, 1)"
+                strokeWidth={1}
+                animatedProps={line2Props}
+              />
+              <AnimatedLine
+                x1={140}
+                y1={140}
+                x2={20}
+                y2={260}
+                stroke="rgba(139, 92, 246, 1)"
+                strokeWidth={1}
+                animatedProps={line3Props}
+              />
+              <AnimatedLine
+                x1={140}
+                y1={140}
+                x2={260}
+                y2={260}
+                stroke="rgba(139, 92, 246, 1)"
+                strokeWidth={1}
+                animatedProps={line4Props}
+              />
 
               {/* Planet symbols along edges */}
               {PLANET_SYMBOLS.map((symbol, index) => {
@@ -225,14 +309,14 @@ export function VerificationGateScreen() {
             </Svg>
 
             {/* Top-left: Life Path (circle) */}
-            <View style={[styles.cornerNumber, styles.topLeft]}>
+            <View style={[styles.cornerNumber, styles.topLeft, styles.cornerShadowOrange]}>
               <View style={[styles.circleNumber, {backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: 'rgba(245, 158, 11, 0.6)'}]}>
                 <Text style={[styles.cornerNumberText, {color: '#F59E0B'}]}>{numerology.life_path}</Text>
               </View>
             </View>
 
             {/* Top-right: Soul Urge (triangle) */}
-            <View style={[styles.cornerNumber, styles.topRight]}>
+            <View style={[styles.cornerNumber, styles.topRight, styles.cornerShadowCyan]}>
               <Svg width={36} height={36} viewBox="0 0 36 36">
                 <Path
                   d="M18 4 L34 32 L2 32 Z"
@@ -247,14 +331,14 @@ export function VerificationGateScreen() {
             </View>
 
             {/* Bottom-left: Expression (square) */}
-            <View style={[styles.cornerNumber, styles.bottomLeft]}>
+            <View style={[styles.cornerNumber, styles.bottomLeft, styles.cornerShadowGreen]}>
               <View style={[styles.squareNumber, {backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: 'rgba(16, 185, 129, 0.6)'}]}>
                 <Text style={[styles.cornerNumberText, {color: '#10B981'}]}>{numerology.expression}</Text>
               </View>
             </View>
 
             {/* Bottom-right: Personality (diamond) */}
-            <View style={[styles.cornerNumber, styles.bottomRight]}>
+            <View style={[styles.cornerNumber, styles.bottomRight, styles.cornerShadowPink]}>
               <Svg width={36} height={36} viewBox="0 0 36 36">
                 <Path
                   d="M18 2 L34 18 L18 34 L2 18 Z"
@@ -485,6 +569,34 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cornerShadowOrange: {
+    shadowColor: '#F59E0B',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  cornerShadowCyan: {
+    shadowColor: '#06B6D4',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  cornerShadowGreen: {
+    shadowColor: '#10B981',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  cornerShadowPink: {
+    shadowColor: '#F472B6',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 12,
   },
   topLeft: {
     top: 2,

@@ -70,7 +70,7 @@ export function SplashScreen() {
         {/* Logo */}
         <Animated.View style={[styles.logoContainer, logoStyle]}>
           <Image
-            source={require('../../assets/images/numeros_icon.png')}
+            source={require('../../assets/images/icon.png')}
             style={styles.logo}
             resizeMode="contain"
           />

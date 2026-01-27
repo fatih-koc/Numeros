@@ -25,9 +25,9 @@ interface FlippablePlanetCardProps {
 }
 
 const SIZE_CONFIG = {
-  small: {height: 185, symbolSize: 26, padding: 12},
-  medium: {height: 205, symbolSize: 34, padding: 14},
-  large: {height: 245, symbolSize: 42, padding: 16},
+  small: {height: 185, symbolSize: 21, padding: 12},
+  medium: {height: 205, symbolSize: 26, padding: 16},
+  large: {height: 245, symbolSize: 32, padding: 20},
 }
 
 export function FlippablePlanetCard({
@@ -184,10 +184,11 @@ const styles = StyleSheet.create({
   },
   planetName: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 10,
+    letterSpacing: 2,
     color: colors.textDim,
     marginBottom: 8,
+    textTransform: 'uppercase',
   },
   signRow: {
     flexDirection: 'row',
@@ -200,18 +201,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   sign: {
-    fontSize: 17,
+    fontSize: 16,
+    fontWeight: '500',
     color: colors.textSecondary,
     fontFamily: fonts.serif,
   },
   degree: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 11,
     color: colors.textDim,
   },
   house: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 10,
     color: colors.textDim,
     marginTop: 4,
   },
@@ -223,18 +225,19 @@ const styles = StyleSheet.create({
   },
   backHeaderSymbol: {
     fontFamily: fonts.symbols,
-    fontSize: 14,
+    fontSize: 9,
   },
   backHeaderName: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 9,
     color: colors.textDim,
     letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   backMeaning: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 21,
     marginBottom: 10,
     textAlign: 'center',
     fontFamily: fonts.serif,
@@ -244,9 +247,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   backSignMeaning: {
-    fontSize: 16,
+    fontSize: 13,
     color: colors.textDim,
-    lineHeight: 22,
+    lineHeight: 18,
     textAlign: 'center',
     fontFamily: fonts.serif,
   },

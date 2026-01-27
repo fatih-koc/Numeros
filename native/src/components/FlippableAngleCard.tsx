@@ -119,14 +119,14 @@ export function FlippableAngleCard({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 165,
+    height: 140,
   },
   face: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 165,
+    height: 140,
     borderWidth: 1,
     borderRadius: 12,
     alignItems: 'center',
@@ -157,9 +157,10 @@ const styles = StyleSheet.create({
   },
   frontLabel: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 10,
+    letterSpacing: 2,
     color: colors.textDim,
+    textTransform: 'uppercase',
   },
   frontSignRow: {
     flexDirection: 'row',
@@ -181,12 +182,12 @@ const styles = StyleSheet.create({
   },
   frontDegree: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 11,
     color: colors.textDim,
     marginBottom: 8,
   },
   frontShortDesc: {
-    fontSize: 16,
+    fontSize: 12,
     color: colors.textDim,
     fontStyle: 'italic',
     fontFamily: fonts.serif,

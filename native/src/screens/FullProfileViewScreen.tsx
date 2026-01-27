@@ -19,6 +19,29 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {Feather} from '@expo/vector-icons'
 import Animated, {FadeIn} from 'react-native-reanimated'
 import {LinearGradient} from 'expo-linear-gradient'
+import Svg, {Path} from 'react-native-svg'
+
+// ShieldCheck icon (shield with checkmark) - matches lucide-react ShieldCheck
+function ShieldCheckIcon({size = 18, color = '#10B981'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M9 12l2 2 4-4"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
 import type {RootStackParamList} from '../navigation/types'
 import {ScreenWrapper} from '../components/ScreenWrapper'
 import {colors} from '../lib/colors'
@@ -181,9 +204,7 @@ export function FullProfileViewScreen() {
                 <Text style={styles.name}>
                   {MOCK_PROFILE.name}, {MOCK_PROFILE.age}
                 </Text>
-                {MOCK_PROFILE.verified && (
-                  <Feather name="shield" size={18} color="#10B981" />
-                )}
+                {MOCK_PROFILE.verified && <ShieldCheckIcon />}
               </View>
               <View style={styles.locationRow}>
                 <Feather name="map-pin" size={12} color="rgba(255, 255, 255, 0.5)" />
@@ -460,7 +481,7 @@ const styles = StyleSheet.create({
   },
   matchPercent: {
     fontFamily: fonts.serif,
-    fontSize: 40,
+    fontSize: 36,
     fontWeight: '600',
     marginBottom: 4,
   },

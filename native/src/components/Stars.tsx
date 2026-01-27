@@ -330,13 +330,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   levelIcon: {
-    fontSize: 21,
+    fontSize: 19,
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 12,
   },
   levelText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 11,
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 10,
     letterSpacing: 3,
     color: colors.textDim,
     textAlign: 'center',
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
   },
   completeText: {
-    fontSize: 16,
+    fontSize: 12,
     color: '#10B981',
     fontStyle: 'italic',
     textAlign: 'center',

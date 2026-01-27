@@ -1,10 +1,22 @@
 import React, {useState} from 'react'
-import {StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, Alert} from 'react-native'
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
+  useWindowDimensions,
+  Alert,
+  Pressable,
+} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import type {RootStackParamList} from '../navigation/types'
 import Animated, {FadeIn} from 'react-native-reanimated'
-import Svg, {Circle} from 'react-native-svg'
+import {LinearGradient} from 'expo-linear-gradient'
+import Svg, {Path, Circle} from 'react-native-svg'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {ScreenWrapper} from '../components/ScreenWrapper'
 import {TimerGateModal} from '../components/TimerGateModal'
 import {colors} from '../lib/colors'
@@ -23,14 +35,33 @@ interface Match {
 
 type ResonanceNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ResonanceResults'>
 
+// Clock icon component
+function ClockIcon({size = 14, color = '#8B5CF6'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={10} stroke={color} strokeWidth={2} />
+      <Path d="M12 6v6l4 2" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+// X icon component
+function XIcon({size = 24, color = 'rgba(255, 255, 255, 0.4)'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M18 6L6 18M6 6l12 12" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
 const MOCK_MATCHES: Match[] = [
   {
     id: 1,
     name: 'Sarah',
     age: 28,
     matchPercentage: 92,
-    reason1: 'Life Path 5 x 3',
-    reason2: 'Venus \u25B3 Moon',
+    reason1: 'Life Path 5 × 3',
+    reason2: 'Venus △ Moon',
     photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
     unlockTimeMs: 0,
   },
@@ -39,8 +70,8 @@ const MOCK_MATCHES: Match[] = [
     name: 'Emma',
     age: 26,
     matchPercentage: 89,
-    reason1: 'Soul Urge 7 x 9',
-    reason2: 'Mars \u25B3 Mars',
+    reason1: 'Soul Urge 7 × 9',
+    reason2: 'Mars △ Mars',
     photoUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
     unlockTimeMs: 3 * 60 * 60 * 1000 + 59 * 60 * 1000,
   },
@@ -49,8 +80,8 @@ const MOCK_MATCHES: Match[] = [
     name: 'Olivia',
     age: 29,
     matchPercentage: 87,
-    reason1: 'Expression 1 x 5',
-    reason2: 'Sun \u25B3 Moon',
+    reason1: 'Expression 1 × 5',
+    reason2: 'Sun △ Moon',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
     unlockTimeMs: 7 * 60 * 60 * 1000 + 59 * 60 * 1000,
   },
@@ -59,8 +90,8 @@ const MOCK_MATCHES: Match[] = [
     name: 'Ava',
     age: 27,
     matchPercentage: 85,
-    reason1: 'Life Path 2 x 6',
-    reason2: 'Mercury \u25B3 Venus',
+    reason1: 'Life Path 2 × 6',
+    reason2: 'Mercury △ Venus',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400',
     unlockTimeMs: 11 * 60 * 60 * 1000 + 59 * 60 * 1000,
   },
@@ -69,8 +100,8 @@ const MOCK_MATCHES: Match[] = [
     name: 'Mia',
     age: 25,
     matchPercentage: 84,
-    reason1: 'Soul Urge 2 x 4',
-    reason2: 'Jupiter \u25B3 Sun',
+    reason1: 'Soul Urge 2 × 4',
+    reason2: 'Jupiter △ Sun',
     photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400',
     unlockTimeMs: 15 * 60 * 60 * 1000 + 59 * 60 * 1000,
   },
@@ -79,8 +110,8 @@ const MOCK_MATCHES: Match[] = [
     name: 'Sophia',
     age: 30,
     matchPercentage: 82,
-    reason1: 'Life Path 3 x 5',
-    reason2: 'Venus \u25B3 Moon',
+    reason1: 'Life Path 3 × 5',
+    reason2: 'Venus △ Moon',
     photoUrl: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400',
     unlockTimeMs: 19 * 60 * 60 * 1000 + 59 * 60 * 1000,
   },
@@ -94,58 +125,6 @@ function formatTime(ms: number): string {
   return `${hours}h ${minutes}m`
 }
 
-function TimerCircle({timeMs}: {timeMs: number}) {
-  const totalTime = 4 * 60 * 60 * 1000
-  const progress = 1 - timeMs / totalTime
-  const circumference = 2 * Math.PI * 10
-  const strokeDashoffset = circumference * (1 - Math.min(progress, 1))
-
-  return (
-    <View style={timerStyles.container}>
-      <Svg width={24} height={24} style={timerStyles.svg}>
-        <Circle cx={12} cy={12} r={10} stroke="rgba(255, 255, 255, 0.15)" strokeWidth={2} fill="none" />
-        <Circle
-          cx={12}
-          cy={12}
-          r={10}
-          stroke="rgba(139, 92, 246, 0.6)"
-          strokeWidth={2}
-          fill="none"
-          strokeDasharray={`${circumference}`}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          rotation={-90}
-          origin="12, 12"
-        />
-      </Svg>
-      <Text style={timerStyles.icon}>C</Text>
-    </View>
-  )
-}
-
-const timerStyles = StyleSheet.create({
-  container: {
-    width: 24,
-    height: 24,
-    position: 'relative',
-  },
-  svg: {
-    transform: [{rotate: '-90deg'}],
-  },
-  icon: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    textAlign: 'center',
-    lineHeight: 24,
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.4)',
-  },
-})
-
 interface MatchCardProps {
   match: Match
   onReveal: () => void
@@ -157,128 +136,159 @@ function MatchCard({match, onReveal, onShowModal, cardWidth}: MatchCardProps) {
   const isReady = match.unlockTimeMs === 0
 
   return (
-    <View style={[cardStyles.container, {width: cardWidth}]}>
-      {/* Photo Area - Blurred */}
-      <View style={cardStyles.photoContainer}>
-        <Image source={{uri: match.photoUrl}} style={cardStyles.photo} blurRadius={20} />
-      </View>
-
-      {/* Info Section */}
-      <View style={cardStyles.infoContainer}>
-        <Text style={cardStyles.nameAge}>
-          {match.name}, {match.age}
-        </Text>
-        <Text style={cardStyles.matchPercent}>{match.matchPercentage}% Match</Text>
-
-        <View style={cardStyles.reasons}>
-          <Text style={cardStyles.reasonText}>{match.reason1}</Text>
-          <Text style={cardStyles.reasonText}>{match.reason2}</Text>
-        </View>
-
-        <View style={cardStyles.spacer} />
-
-        {/* Timer/Button Area */}
-        <View style={cardStyles.actionArea}>
-          {isReady ? (
-            <TouchableOpacity style={cardStyles.revealButton} onPress={onReveal} activeOpacity={0.7}>
-              <Text style={cardStyles.revealButtonText}>REVEAL</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={cardStyles.timerContainer} onPress={onShowModal} activeOpacity={0.7}>
-              <TimerCircle timeMs={match.unlockTimeMs} />
+    <Pressable
+      onPress={isReady ? onReveal : onShowModal}
+      style={({pressed}) => [
+        cardStyles.container,
+        {width: cardWidth},
+        pressed && cardStyles.containerPressed,
+      ]}
+    >
+      {/* Full-bleed Background Image */}
+      <ImageBackground
+        source={{uri: match.photoUrl}}
+        style={cardStyles.backgroundImage}
+        imageStyle={[
+          cardStyles.image,
+          !isReady && cardStyles.imageBlurred,
+        ]}
+        blurRadius={isReady ? 0 : 12}
+      >
+        {/* Timer Badge - Top Center (only if locked) */}
+        {!isReady && (
+          <View style={cardStyles.timerBadgeContainer}>
+            <View style={cardStyles.timerBadge}>
+              <ClockIcon />
               <Text style={cardStyles.timerText}>{formatTime(match.unlockTimeMs)}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </View>
+            </View>
+          </View>
+        )}
+
+        {/* Bottom Gradient Overlay with Info */}
+        <LinearGradient
+          colors={['transparent', 'rgba(26, 21, 51, 0.6)', 'rgba(26, 21, 51, 0.95)']}
+          locations={[0, 0.3, 1]}
+          style={cardStyles.gradientOverlay}
+        >
+          {/* Name + Age Row */}
+          <View style={cardStyles.nameRow}>
+            <Text style={cardStyles.nameAge}>
+              {match.name}, {match.age}
+            </Text>
+            <Text style={[cardStyles.matchPercent, isReady && cardStyles.matchPercentReady]}>
+              {match.matchPercentage}%
+            </Text>
+          </View>
+
+          {/* Match Reasons */}
+          <View style={cardStyles.reasons}>
+            <Text style={cardStyles.reasonText}>{match.reason1}</Text>
+            <Text style={cardStyles.reasonText}>{match.reason2}</Text>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    </Pressable>
   )
 }
 
 const cardStyles = StyleSheet.create({
   container: {
     height: 200,
-    backgroundColor: colors.bgMid,
     borderWidth: 1,
     borderColor: 'rgba(139, 92, 246, 0.2)',
     borderRadius: 12,
     overflow: 'hidden',
   },
-  photoContainer: {
-    height: 80,
-    overflow: 'hidden',
+  containerPressed: {
+    transform: [{translateY: -2}],
+    shadowColor: '#8B5CF6',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  photo: {
-    width: '100%',
-    height: '100%',
+  backgroundImage: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  image: {
+    resizeMode: 'cover',
     transform: [{scale: 1.1}],
   },
-  infoContainer: {
+  imageBlurred: {
+    opacity: 0.6,
+  },
+  timerBadgeContainer: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
+  timerText: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.9)',
+    letterSpacing: 0.5,
+  },
+  gradientOverlay: {
     padding: 12,
+    paddingTop: 24,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 8,
   },
   nameAge: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    color: colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.95)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
   },
   matchPercent: {
     fontFamily: fonts.mono,
     fontSize: 11,
-    color: colors.accentViolet,
-    marginTop: 4,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
+  },
+  matchPercentReady: {
+    color: '#A78BFA',
   },
   reasons: {
-    marginTop: 8,
     gap: 2,
   },
   reasonText: {
     fontFamily: fonts.mono,
     fontSize: 10,
-    color: colors.textDim,
-    lineHeight: 14,
-  },
-  spacer: {
-    flex: 1,
-  },
-  actionArea: {
-    height: 36,
-    marginTop: 8,
-  },
-  revealButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.5)',
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-  },
-  revealButtonText: {
-    fontFamily: fonts.mono,
-    fontSize: 12,
-    color: colors.textPrimary,
-  },
-  timerContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 6,
-  },
-  timerText: {
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 13,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
 })
 
 export function ResonanceResultsScreen() {
   const navigation = useNavigation<ResonanceNavigationProp>()
+  const insets = useSafeAreaInsets()
   const {width: screenWidth} = useWindowDimensions()
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
 
@@ -286,7 +296,6 @@ export function ResonanceResultsScreen() {
   const cardWidth = (containerWidth - 12) / 2
 
   const handleReveal = (match: Match) => {
-    // Navigate to HumanReveal with match data
     navigation.navigate('HumanReveal', {
       match: {
         name: match.name,
@@ -307,6 +316,11 @@ export function ResonanceResultsScreen() {
 
   const handleSetReminder = () => {
     Alert.alert('Reminder Set', `We'll notify you when ${selectedMatch?.name}'s profile is ready to view.`)
+    setSelectedMatch(null)
+  }
+
+  const handleClose = () => {
+    navigation.goBack()
   }
 
   const handleContinue = () => {
@@ -315,7 +329,16 @@ export function ResonanceResultsScreen() {
 
   return (
     <ScreenWrapper>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + 24}]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Close Button */}
+        <Pressable style={styles.closeButton} onPress={handleClose}>
+          <XIcon />
+        </Pressable>
+
         <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
@@ -362,9 +385,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingTop: 60,
     paddingBottom: 80,
     paddingHorizontal: 16,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: 8,
+    zIndex: 20,
   },
   container: {
     width: '100%',
@@ -400,7 +429,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   continueButton: {
-    marginTop: 40,
+    marginTop: 20,
     paddingVertical: 8,
   },
   continueText: {

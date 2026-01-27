@@ -6,6 +6,10 @@ import {
   LinearGradient,
   RadialGradient,
   vec,
+  FractalNoise,
+  Blend,
+  Fill,
+  Group,
 } from '@shopify/react-native-skia'
 import {colors} from '../lib/colors'
 
@@ -54,6 +58,13 @@ export function Background() {
             positions={[0, 1]}
           />
         </Rect>
+
+        {/* Noise overlay - 3% opacity (0.03) */}
+        <Group opacity={0.03}>
+          <Rect x={0} y={0} width={width} height={height}>
+            <FractalNoise freqX={0.9} freqY={0.9} octaves={4} />
+          </Rect>
+        </Group>
       </Canvas>
     </View>
   )

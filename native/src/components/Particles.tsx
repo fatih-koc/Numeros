@@ -9,7 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated'
 
-const PARTICLE_COUNT = 25
+const PARTICLE_COUNT = 30
 
 interface ParticleData {
   id: number
@@ -24,9 +24,9 @@ const generateParticleData = (): ParticleData[] => {
   return Array.from({length: PARTICLE_COUNT}, (_, i) => ({
     id: i,
     xPercent: Math.random(), // 0-1 percentage of screen width
-    duration: 12000 + Math.random() * 12000, // 12-24s
+    duration: 10000 + Math.random() * 10000, // 10-20s (matching prototype)
     delay: Math.random() * 15000, // 0-15s delay
-    size: 2 + Math.random() * 2, // 2-4px
+    size: 2, // Fixed 2px (matching prototype)
   }))
 }
 
@@ -116,10 +116,10 @@ const styles = StyleSheet.create({
   },
   particle: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 10,
     shadowColor: 'rgba(200, 180, 255, 1)',
     shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.6,
   },
 })

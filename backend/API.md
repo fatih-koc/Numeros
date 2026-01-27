@@ -1,136 +1,120 @@
-# numEros API Documentation
+# Numeros Backend API Documentation
 
-Base URL: `http://localhost:8000/api`
+Base URL: `http://localhost:8000/api/v1`
 
 ## Authentication
 
-All endpoints except registration, login, and profile calculation require authentication using token-based authentication.
-
-Include the token in the request header:
+All authenticated endpoints require the `Authorization` header:
 ```
-Authorization: Token <your-token-here>
+Authorization: Bearer <access_token>
 ```
 
 ---
 
-## Authentication Endpoints
+## Auth Endpoints
 
-### Register User
+### Register
+```
+POST /auth/register/
+```
 
-Create a new user account with automatic numerology and zodiac calculation.
-
-**Endpoint:** `POST /api/auth/register`
-
-**Authentication:** Not required
-
-**Request Body:**
+**Request:**
 ```json
 {
   "email": "user@example.com",
-  "password": "SecurePassword123!",
-  "password_confirm": "SecurePassword123!",
-  "name": "John Doe",
+  "password": "SecurePass123",
+  "display_name": "Jane Smith",
   "birth_date": "1990-05-15",
-  "gender": "male",
-  "seeking": "female",
-  "use_turkish_letters": false
+  "birth_time": "14:30",          // optional
+  "birth_place": "New York, NY",  // optional
+  "latitude": 40.7128,            // optional
+  "longitude": -74.0060           // optional
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
+  "access": "eyJ...",
+  "refresh": "eyJ...",
   "user": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "id": 1,
     "email": "user@example.com",
-    "name": "John Doe",
+    "display_name": "Jane Smith",
     "birth_date": "1990-05-15",
-    "numerology": {
-      "life_path": 3,
-      "day_number": 6,
-      "month_number": 5,
-      "cycle_number": 5,
-      "soul_urge": 7,
-      "expression": 1,
-      "challenge": 1,
-      "life_path_meaning": {
-        "title": "The Creative Expresser",
-        "description": "You bring joy through creation",
-        "keywords": ["creativity", "expression", "joy"]
-      }
-    },
-    "zodiac": {
-      "animal": "at",
-      "element": "wood",
-      "position": 7,
-      "name_en": "Horse",
-      "name_tr": "At",
-      "characteristics": {
-        "traits": ["Energetic", "Independent", "Free-spirited"],
-        "description": "The Horse is warm-hearted and enthusiastic, loving freedom"
-      }
-    },
-    "gender": "male",
-    "seeking": "female",
-    "created_at": "2026-01-12T10:30:00Z",
-    "last_active": "2026-01-12T10:30:00Z"
+    "life_path": 3,
+    "soul_urge": 7,
+    "expression": 5,
+    "personality": 8,
+    "sun_sign": "Taurus",
+    "moon_sign": "Capricorn",
+    "rising_sign": null,
+    "chart_level": 2,
+    "numerology": {...},
+    "astrology": {...}
   }
 }
 ```
 
----
-
 ### Login
+```
+POST /auth/login/
+```
 
-Authenticate and receive access token.
-
-**Endpoint:** `POST /api/auth/login`
-
-**Authentication:** Not required
-
-**Request Body:**
+**Request:**
 ```json
 {
   "email": "user@example.com",
-  "password": "SecurePassword123!"
+  "password": "SecurePass123"
 }
 ```
 
 **Response:** `200 OK`
 ```json
 {
-  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
-  "user": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "user@example.com",
-    "name": "John Doe",
-    ...
-  }
+  "access": "eyJ...",
+  "refresh": "eyJ...",
+  "user": {...}
 }
 ```
-
-**Error Response:** `401 Unauthorized`
-```json
-{
-  "error": "Invalid credentials"
-}
-```
-
----
 
 ### Logout
+```
+POST /auth/logout/
+Authorization: Bearer <token>
+```
 
-Delete authentication token.
-
-**Endpoint:** `POST /api/auth/logout`
-
-**Authentication:** Required
+**Request:**
+```json
+{
+  "refresh": "eyJ..."
+}
+```
 
 **Response:** `200 OK`
 ```json
 {
-  "message": "Successfully logged out"
+  "success": true
+}
+```
+
+### Refresh Token
+```
+POST /auth/refresh/
+```
+
+**Request:**
+```json
+{
+  "refresh": "eyJ..."
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "access": "eyJ...",
+  "refresh": "eyJ..."
 }
 ```
 
@@ -138,107 +122,116 @@ Delete authentication token.
 
 ## Profile Endpoints
 
-### Get Current User Profile
-
-Retrieve authenticated user's profile with calculated numerology and zodiac.
-
-**Endpoint:** `GET /api/profile/me`
-
-**Authentication:** Required
+### Get Profile
+```
+GET /profile/me/
+Authorization: Bearer <token>
+```
 
 **Response:** `200 OK`
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "id": 1,
   "email": "user@example.com",
-  "name": "John Doe",
+  "display_name": "Jane Smith",
   "birth_date": "1990-05-15",
-  "numerology": { ... },
-  "zodiac": { ... },
-  "gender": "male",
-  "seeking": "female",
-  "created_at": "2026-01-12T10:30:00Z",
-  "last_active": "2026-01-12T10:30:00Z"
+  "birth_time": "14:30:00",
+  "birth_place": "New York, NY",
+  "bio": "Love astrology and numerology",
+  "photos": ["/media/photos/1/abc123.jpg"],
+  "gender": "female",
+  "interested_in": ["male"],
+  "life_path": 3,
+  "soul_urge": 7,
+  "expression": 5,
+  "personality": 8,
+  "sun_sign": "Taurus",
+  "moon_sign": "Capricorn",
+  "rising_sign": "Leo",
+  "chart_level": 4,
+  "is_verified": false,
+  "is_profile_complete": true,
+  "numerology": {
+    "life_path": 3,
+    "soul_urge": 7,
+    "expression": 5,
+    "personality": 8,
+    "master_numbers": []
+  },
+  "astrology": {
+    "sun_sign": "Taurus",
+    "moon_sign": "Capricorn",
+    "rising_sign": "Leo",
+    "chart_level": 4,
+    "chart_data": {...}
+  }
 }
 ```
-
----
 
 ### Update Profile
+```
+PATCH /profile/me/
+Authorization: Bearer <token>
+```
 
-Update user profile information.
-
-**Endpoint:** `PUT/PATCH /api/profile/me`
-
-**Authentication:** Required
-
-**Request Body:**
+**Request:**
 ```json
 {
-  "name": "John Smith",
-  "gender": "male",
-  "seeking": "female",
-  "location_lat": 41.0082,
-  "location_lng": 28.9784
+  "display_name": "Jane S.",
+  "bio": "Updated bio",
+  "gender": "female",
+  "interested_in": ["male", "non_binary"],
+  "age_min_preference": 25,
+  "age_max_preference": 40
+}
+```
+
+**Response:** `200 OK` - Updated user object
+
+### Calculate (Anonymous)
+```
+POST /profile/calculate/
+```
+
+Calculate numerology and astrology without creating an account. Used during onboarding.
+
+**Request:**
+```json
+{
+  "name": "Jane Smith",
+  "birth_date": "1990-05-15",
+  "birth_time": "14:30",    // optional
+  "latitude": 40.7128,      // optional
+  "longitude": -74.0060     // optional
 }
 ```
 
 **Response:** `200 OK`
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "email": "user@example.com",
-  "name": "John Smith",
-  ...
-}
-```
-
----
-
-### Calculate Profile
-
-Calculate numerology and zodiac from birth data without creating an account.
-
-**Endpoint:** `POST /api/profile/calculate`
-
-**Authentication:** Not required
-
-**Request Body:**
-```json
-{
-  "name": "Jane Doe",
-  "birth_date": "1992-08-22",
-  "use_turkish_letters": false,
-  "current_year": 2026
-}
-```
-
-**Response:** `200 OK`
-```json
-{
+  "chart_level": 4,
   "numerology": {
-    "life_path": 7,
-    "day_number": 4,
-    "month_number": 8,
-    "cycle_number": 8,
-    "soul_urge": 1,
-    "expression": 9,
-    "challenge": 4,
-    "life_path_meaning": {
-      "title": "The Deep Seeker",
-      "description": "You find truth in silence",
-      "keywords": ["depth", "mysticism", "introspection"]
-    }
+    "life_path": 3,
+    "soul_urge": 7,
+    "expression": 5,
+    "personality": 8,
+    "master_numbers": []
   },
-  "zodiac": {
-    "animal": "maymun",
-    "element": "water",
-    "position": 9,
-    "name_en": "Monkey",
-    "name_tr": "Maymun",
-    "characteristics": {
-      "traits": ["Clever", "Playful", "Curious"],
-      "description": "The Monkey is intelligent and witty, always seeking fun"
+  "astrology": {
+    "zodiac_system": "tropical",
+    "ephemeris": "pyswisseph",
+    "angles": {
+      "ascendant": {"sign": "Leo", "degree": 15.5},
+      "midheaven": {"sign": "Taurus", "degree": 2.3}
+    },
+    "houses": {
+      "system": "placidus",
+      "cusps": [15.5, 45.2, ...]
+    },
+    "planets": {
+      "sun": {"sign": "Taurus", "degree_in_sign": 24.4, "house": 10},
+      "moon": {"sign": "Capricorn", "degree_in_sign": 27.2, "house": 6},
+      ...
     }
   }
 }
@@ -246,56 +239,69 @@ Calculate numerology and zodiac from birth data without creating an account.
 
 ---
 
-### Get Blueprint
+## Photo Endpoints
 
-Get detailed numerology blueprint for current user.
+### Upload Photo
+```
+POST /profile/photos/
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
 
-**Endpoint:** `GET /api/profile/blueprint`
+**Request:** Form data with `photo` file field
 
-**Authentication:** Required
+**Constraints:**
+- Max 6 photos per user
+- Allowed types: JPEG, PNG, WebP
+- Max size: 10MB
+
+**Response:** `201 Created`
+```json
+{
+  "photo_url": "/media/photos/1/abc123.jpg",
+  "photos": ["/media/photos/1/abc123.jpg"]
+}
+```
+
+### Delete Photo
+```
+DELETE /profile/photos/delete/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "photo_url": "/media/photos/1/abc123.jpg"
+}
+```
 
 **Response:** `200 OK`
 ```json
 {
-  "core": {
-    "number": 3,
-    "meaning": {
-      "title": "The Creative Expresser",
-      "description": "You bring joy through creation",
-      "keywords": ["creativity", "expression", "joy"]
-    }
-  },
-  "desire": {
-    "number": 7,
-    "meaning": {
-      "title": "The Deep Seeker",
-      "description": "You find truth in silence",
-      "keywords": ["depth", "mysticism", "introspection"]
-    }
-  },
-  "bond": {
-    "number": 1,
-    "meaning": {
-      "title": "The Independent Leader",
-      "description": "You lead with vision and courage",
-      "keywords": ["leadership", "independence", "initiative"]
-    }
-  },
-  "friction": {
-    "number": 1,
-    "description": "Challenge number 1"
-  },
-  "cycle": {
-    "number": 5,
-    "year": 2026,
-    "description": "You are in cycle 5 for 2026"
-  },
-  "zodiac": {
-    "animal": "at",
-    "element": "wood",
-    "name_en": "Horse",
-    "name_tr": "At"
-  }
+  "success": true,
+  "photos": []
+}
+```
+
+### Reorder Photos
+```
+PUT /profile/photos/reorder/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "photos": ["/media/photos/1/def456.jpg", "/media/photos/1/abc123.jpg"]
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "photos": ["/media/photos/1/def456.jpg", "/media/photos/1/abc123.jpg"]
 }
 ```
 
@@ -304,486 +310,593 @@ Get detailed numerology blueprint for current user.
 ## Matching Endpoints
 
 ### Scan for Matches
-
-Scan the database for compatible matches based on numerology and zodiac.
-
-**Endpoint:** `POST /api/match/scan`
-
-**Authentication:** Required
-
-**Request Body:**
-```json
-{
-  "limit": 50,
-  "min_score": 50,
-  "match_types": ["magnetic_stability", "passionate_tension", "twin_flame"],
-  "gender": "female"
-}
+```
+POST /scan/
+Authorization: Bearer <token>
 ```
 
-**Parameters:**
-- `limit` (optional): Maximum number of matches to return (default: 50, max: 100)
-- `min_score` (optional): Minimum compatibility score (default: 50)
-- `match_types` (optional): Filter by match types
-- `gender` (optional): Filter by gender
+**Request:**
+```json
+{
+  "limit": 10,        // optional, default 10, max 50
+  "age_min": 25,      // optional
+  "age_max": 35       // optional
+}
+```
 
 **Response:** `200 OK`
 ```json
 {
-  "scanned_count": 245,
-  "rejected_count": 180,
-  "resonances_found": 3,
-  "matches": [
+  "profiles": [
     {
-      "user": {
-        "id": "660e8400-e29b-41d4-a716-446655440001",
-        "name": "Jane Smith",
+      "profile": {
+        "id": 2,
+        "display_name": "John Doe",
         "age": 32,
-        "numerology": { ... },
-        "zodiac": { ... },
-        "gender": "female"
+        "photos": [...],
+        "bio": "...",
+        "sun_sign": "Sagittarius",
+        "chart_level": 2,
+        "numerology": {...}
       },
       "compatibility": {
-        "total_score": 85,
+        "overall_score": 85,
         "match_type": "magnetic_stability",
-        "risk_level": "low",
-        "headline": "Magnetic Stability",
-        "axes": {
-          "structure": 45,
-          "dynamics": 0,
-          "culture": 20,
-          "affinity": 0,
-          "time": -2
-        }
+        "match_description": "Strong attraction with solid foundation",
+        "highlights": [
+          "Your Life Paths (3 & 5) are in perfect harmony",
+          "Moon Sextile: Emotional connection"
+        ],
+        "numerology": {...},
+        "astrology": {...}
       }
     }
-  ]
+  ],
+  "count": 1,
+  "has_more": false
 }
 ```
-
----
 
 ### Evaluate Compatibility
+```
+POST /scan/evaluate/
+Authorization: Bearer <token>
+```
 
-Calculate detailed compatibility with a specific user.
+Get detailed compatibility with a specific user.
 
-**Endpoint:** `POST /api/match/evaluate`
-
-**Authentication:** Required
-
-**Request Body:**
+**Request:**
 ```json
 {
-  "target_user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "include_trace": true
+  "target_user_id": 2
 }
 ```
 
 **Response:** `200 OK`
 ```json
 {
-  "axes": {
-    "structure": 45,
-    "dynamics": 0,
-    "culture": 20,
-    "affinity": 0,
-    "time": -2
-  },
-  "total_score": 63,
-  "dominant_axis": "structure",
-  "labels": {
-    "match_type": "gentle_growth",
-    "risk_level": "medium",
-    "headline": "Gentle Growth",
-    "description": "A nurturing connection that deepens over time",
-    "longevity_forecast": "Can last with mutual effort"
-  },
-  "rule_trace": [
-    {
-      "rule": "Life Path Compatibility",
-      "triggered": true,
-      "impact": 45,
-      "explanation": "Life paths 3 and 5 are compatible"
+  "profile": {...},
+  "compatibility": {
+    "overall_score": 85,
+    "match_type": "magnetic_stability",
+    "match_description": "Strong attraction with solid foundation",
+    "numerology": {
+      "overall_score": 85,
+      "life_path_harmony": 95,
+      "soul_connection": 80,
+      "expression_sync": 75,
+      "personality_match": 90,
+      "strengths": [...],
+      "challenges": [...]
     },
-    {
-      "rule": "Day Number Compatibility",
-      "triggered": true,
-      "impact": 0,
-      "explanation": "Day numbers 6 and 7 are neutral"
+    "astrology": {
+      "aspects": [
+        {
+          "planet1": "sun",
+          "planet2": "moon",
+          "aspect": "trine",
+          "orb": 2.5,
+          "meaning": "Natural emotional harmony"
+        }
+      ],
+      "harmony_score": 5,
+      "tension_score": 2,
+      "overall_compatibility": 85
     },
+    "highlights": [...]
+  }
+}
+```
+
+### Send Resonance
+```
+POST /resonance/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "target_user_id": 2,
+  "action": "resonate"  // "resonate" | "decline" | "maybe_later"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "is_match": true,
+  "match": {
+    "id": 1,
+    "other_user": {...},
+    "overall_score": 85,
+    "compatibility": {...},
+    "is_conversation_started": false,
+    "created_at": "2026-01-27T12:00:00Z"
+  }
+}
+```
+
+### List Matches
+```
+GET /matches/
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
     {
-      "rule": "Month Number Match",
-      "triggered": false,
-      "impact": 0,
-      "explanation": "Different birth months"
-    },
-    {
-      "rule": "Directional Life Path Compatibility",
-      "triggered": true,
-      "impact": 0,
-      "explanation": "Symmetric power dynamic - balanced relationship"
-    },
-    {
-      "rule": "Zodiac Compatibility",
-      "triggered": true,
-      "impact": 20,
-      "explanation": "at and kaplan are harmonious"
-    },
-    {
-      "rule": "Affinity Axis",
-      "triggered": false,
-      "impact": 0,
-      "explanation": "Auxiliary factors not implemented in MVP"
-    },
-    {
-      "rule": "Cycle Alignment",
-      "triggered": true,
-      "impact": -2,
-      "explanation": "Close cycle alignment (distance: 2)"
-    },
-    {
-      "rule": "Structural Collapse Override",
-      "triggered": false,
-      "impact": 0,
-      "explanation": "No double clash detected"
-    },
-    {
-      "rule": "Temporal Suppression Override",
-      "triggered": false,
-      "impact": 0,
-      "explanation": "Cycle distance within acceptable range"
+      "id": 1,
+      "other_user": {
+        "id": 2,
+        "display_name": "John Doe",
+        "age": 32,
+        "photos": [...],
+        "numerology": {...},
+        "astrology": {...}
+      },
+      "overall_score": 85,
+      "compatibility": {...},
+      "is_conversation_started": true,
+      "last_message_at": "2026-01-27T14:30:00Z",
+      "created_at": "2026-01-27T12:00:00Z"
     }
   ]
 }
 ```
 
----
+### Get Match Detail
+```
+GET /matches/{id}/
+Authorization: Bearer <token>
+```
 
-### Get Match Candidates
+**Response:** `200 OK` - Full match object with detailed compatibility
 
-Retrieve cached match candidates sorted by compatibility.
+### Incoming Resonances
+```
+GET /resonances/incoming/
+Authorization: Bearer <token>
+```
 
-**Endpoint:** `GET /api/match/candidates?limit=20&min_score=60`
-
-**Authentication:** Required
-
-**Query Parameters:**
-- `limit` (optional): Number of candidates (default: 20)
-- `min_score` (optional): Minimum score (default: 50)
+People who liked you but you haven't responded to.
 
 **Response:** `200 OK`
 ```json
-[
-  {
-    "user": { ... },
-    "compatibility": {
-      "total_score": 85,
-      "match_type": "magnetic_stability",
-      ...
+{
+  "count": 1,
+  "results": [
+    {
+      "id": 5,
+      "user": {
+        "id": 3,
+        "display_name": "Emily Rose",
+        "age": 28,
+        "photos": [...],
+        "sun_sign": "Pisces",
+        "numerology": {...}
+      },
+      "compatibility_score": 76,
+      "created_at": "2026-01-27T10:00:00Z"
     }
-  }
-]
+  ]
+}
 ```
+
+### Maybe Later Queue
+```
+GET /resonances/maybe-later/
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "count": 1,
+  "results": [
+    {
+      "id": 3,
+      "user": {...},
+      "compatibility_score": 72,
+      "expires_at": "2026-02-03T10:00:00Z",
+      "days_remaining": 6,
+      "created_at": "2026-01-27T10:00:00Z"
+    }
+  ]
+}
+```
+
+### Convert Maybe Later
+```
+POST /resonances/maybe-later/{id}/convert/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "action": "resonate"  // "resonate" | "decline"
+}
+```
+
+**Response:** `200 OK` - Same as resonance response
 
 ---
 
-## Resonance Endpoints
+## Messaging Endpoints
 
-### Resonate with User
+### List Conversations
+```
+GET /conversations/
+Authorization: Bearer <token>
+```
 
-Like/resonate with another user. Creates mutual match if both users resonate.
-
-**Endpoint:** `POST /api/resonance/resonate`
-
-**Authentication:** Required
-
-**Request Body:**
+**Response:** `200 OK`
 ```json
 {
-  "target_user_id": "660e8400-e29b-41d4-a716-446655440001"
+  "conversations": [
+    {
+      "match_id": 1,
+      "other_user": {
+        "id": 2,
+        "display_name": "John Doe",
+        "photos": [...]
+      },
+      "last_message": {
+        "id": 5,
+        "content": "Would you like to meet?",
+        "is_mine": false,
+        "read_at": null,
+        "created_at": "2026-01-27T14:30:00Z"
+      },
+      "unread_count": 1,
+      "is_conversation_started": true
+    }
+  ],
+  "count": 1
+}
+```
+
+### List Messages
+```
+GET /matches/{match_id}/messages/
+Authorization: Bearer <token>
+```
+
+Automatically marks unread messages as read.
+
+**Response:** `200 OK`
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "sender": {
+        "id": 1,
+        "display_name": "Jane Smith",
+        "photos": [...]
+      },
+      "content": "Hey! Our compatibility looks amazing.",
+      "is_mine": true,
+      "read_at": null,
+      "created_at": "2026-01-27T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "sender": {
+        "id": 2,
+        "display_name": "John Doe",
+        "photos": [...]
+      },
+      "content": "I know! The Life Path harmony is great.",
+      "is_mine": false,
+      "read_at": "2026-01-27T12:05:00Z",
+      "created_at": "2026-01-27T12:02:00Z"
+    }
+  ]
+}
+```
+
+### Send Message
+```
+POST /matches/{match_id}/messages/send/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "content": "Hello! Nice to match with you."
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "id": "770e8400-e29b-41d4-a716-446655440002",
-  "user1": { ... },
-  "user2": { ... },
-  "status": "pending",
-  "is_mutual": false,
-  "can_chat": false,
-  "user1_resonated_at": "2026-01-12T11:00:00Z",
-  "user2_resonated_at": null,
-  "eros_activated_at": null,
-  "compatibility_score": 75,
-  "match_type": "gentle_growth",
-  "created_at": "2026-01-12T11:00:00Z"
+  "id": 6,
+  "sender": {...},
+  "content": "Hello! Nice to match with you.",
+  "is_mine": true,
+  "read_at": null,
+  "created_at": "2026-01-27T15:00:00Z"
 }
 ```
 
-**Mutual Match Response:**
+### Mark Messages Read
+```
+POST /matches/{match_id}/messages/read/
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
 ```json
 {
-  "id": "770e8400-e29b-41d4-a716-446655440002",
-  "user1": { ... },
-  "user2": { ... },
-  "status": "mutual",
-  "is_mutual": true,
-  "can_chat": true,
-  "user1_resonated_at": "2026-01-12T11:00:00Z",
-  "user2_resonated_at": "2026-01-12T11:30:00Z",
-  "eros_activated_at": "2026-01-12T11:30:00Z",
-  "compatibility_score": 75,
-  "match_type": "gentle_growth",
-  "created_at": "2026-01-12T11:00:00Z"
+  "success": true,
+  "messages_marked_read": 2
 }
 ```
 
 ---
 
-### Decline User
+## Forecast Endpoints
 
-Decline a potential match.
+### Today's Forecast
+```
+GET /forecast/today/
+Authorization: Bearer <token>
+```
 
-**Endpoint:** `POST /api/resonance/decline`
-
-**Authentication:** Required
-
-**Request Body:**
+**Response:** `200 OK`
 ```json
 {
-  "target_user_id": "660e8400-e29b-41d4-a716-446655440001"
+  "date": "2026-01-27",
+  "universal_day": {
+    "number": 2,
+    "theme": "Partnership",
+    "energy": "Cooperation & Sensitivity",
+    "color": "#F472B6",
+    "glow": "#F472B640"
+  },
+  "personal_day": {
+    "number": 4,
+    "theme": "Foundation",
+    "energy": "Stability & Hard Work",
+    "color": "#10B981",
+    "glow": "#10B98140",
+    "advice": "Build something lasting. Focus on practical matters.",
+    "love": "Security and commitment are themes. Show reliability.",
+    "challenge": "Don't become too rigid or resistant to change."
+  },
+  "life_path": 3,
+  "harmony_score": 75,
+  "harmony_description": "Strong harmony - favorable conditions for your goals"
+}
+```
+
+### Week Forecast
+```
+GET /forecast/week/
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "forecasts": [
+    {"date": "2026-01-27", "personal_day": {...}, ...},
+    {"date": "2026-01-28", "personal_day": {...}, ...},
+    ...
+  ],
+  "life_path": 3
+}
+```
+
+### Specific Date Forecast
+```
+GET /forecast/{date}/
+Authorization: Bearer <token>
+```
+
+Date format: `YYYY-MM-DD`
+
+**Response:** `200 OK` - Same as today's forecast
+
+---
+
+## Device / Notification Endpoints
+
+### Register Device
+```
+POST /profile/devices/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "platform": "ios",           // "ios" | "android"
+  "token": "push_token_here",
+  "device_id": "unique-device-uuid",
+  "app_version": "1.0.0",      // optional
+  "os_version": "17.2"         // optional
+}
+```
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "device_id": "unique-device-uuid",
+  "created": true
+}
+```
+
+### Unregister Device
+```
+DELETE /profile/devices/unregister/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "device_id": "unique-device-uuid"
 }
 ```
 
 **Response:** `200 OK`
 ```json
 {
-  "message": "User declined"
+  "success": true,
+  "deleted": true
 }
 ```
 
----
+### Update Notification Settings
+```
+PATCH /profile/devices/settings/
+Authorization: Bearer <token>
+```
 
-### List Resonances
-
-Get all resonances for current user.
-
-**Endpoint:** `GET /api/resonance/list?status=pending`
-
-**Authentication:** Required
-
-**Query Parameters:**
-- `status` (optional): Filter by status (pending, mutual, declined, expired)
+**Request:**
+```json
+{
+  "device_id": "unique-device-uuid",
+  "notifications_enabled": true,
+  "match_notifications": true,
+  "message_notifications": true,
+  "forecast_notifications": false
+}
+```
 
 **Response:** `200 OK`
 ```json
-[
-  {
-    "id": "770e8400-e29b-41d4-a716-446655440002",
-    "user1": { ... },
-    "user2": { ... },
-    "status": "pending",
-    "is_mutual": false,
-    "can_chat": false,
-    "user1_resonated_at": "2026-01-12T11:00:00Z",
-    "user2_resonated_at": null,
-    "eros_activated_at": null,
-    "compatibility_score": 75,
-    "match_type": "gentle_growth",
-    "created_at": "2026-01-12T11:00:00Z"
+{
+  "success": true,
+  "settings": {
+    "notifications_enabled": true,
+    "match_notifications": true,
+    "message_notifications": true,
+    "forecast_notifications": false
   }
-]
-```
-
----
-
-### Get Mutual Matches
-
-Get only mutual matches (Eros activated).
-
-**Endpoint:** `GET /api/resonance/mutual`
-
-**Authentication:** Required
-
-**Response:** `200 OK`
-```json
-[
-  {
-    "id": "770e8400-e29b-41d4-a716-446655440002",
-    "user1": { ... },
-    "user2": { ... },
-    "status": "mutual",
-    "is_mutual": true,
-    "can_chat": true,
-    "user1_resonated_at": "2026-01-12T11:00:00Z",
-    "user2_resonated_at": "2026-01-12T11:30:00Z",
-    "eros_activated_at": "2026-01-12T11:30:00Z",
-    "compatibility_score": 85,
-    "match_type": "magnetic_stability",
-    "created_at": "2026-01-12T11:00:00Z"
-  }
-]
+}
 ```
 
 ---
 
 ## Match Types
 
-The system classifies matches into the following types:
+| Type | Score Range | Description |
+|------|-------------|-------------|
+| `twin_flame` | 90-100 | Rare cosmic alignment |
+| `magnetic_stability` | 75-89 | Strong attraction with solid foundation |
+| `passionate_tension` | 60-74 | Dynamic energy, growth through challenges |
+| `gentle_growth` | 45-59 | Steady connection, gradual deepening |
+| `karmic_lesson` | 0-44 | Learning opportunity, contrasting energies |
 
-- **twin_flame**: Cosmic alignment with rare number mirroring (85-100 score)
-- **magnetic_stability**: Strong attraction with emotional safety (75-84 score)
-- **passionate_tension**: High chemistry with growth edges (70-84 score)
-- **gentle_growth**: Nurturing connection that deepens over time (50-69 score)
-- **karmic_lesson**: Teaches through contrast (30-49 score)
-- **incompatible**: Fundamental incompatibilities (<30 score)
+---
 
-## Risk Levels
+## Chart Levels
 
-- **low**: High compatibility with good stability
-- **medium**: Moderate compatibility, requires effort
-- **high**: Low compatibility, challenging relationship
+| Level | Data Required | Includes |
+|-------|---------------|----------|
+| 1 | Birth date only | Sun sign, approximate Moon |
+| 2 | Date + time | Precise Moon, all planets |
+| 3 | Date + location | (Uncommon) |
+| 4 | Date + time + location | Full chart with houses, Ascendant, Midheaven |
 
-## Compatibility Axes
-
-The 5-axis compatibility system:
-
-1. **Structure** (Numerology heavy): Long-term stability based on life path, day, and month numbers
-2. **Dynamics** (Directional): Power balance and role dynamics (asymmetric)
-3. **Culture** (Zodiac): Cultural compatibility based on Chinese/Turkish zodiac
-4. **Affinity** (Auxiliary factors): Additional compatibility factors (Phase 2)
-5. **Time** (Cycle alignment): Temporal compatibility based on life cycles
+---
 
 ## Error Responses
 
-All endpoints may return the following error responses:
-
-**400 Bad Request**
 ```json
 {
-  "field_name": ["Error message"]
+  "error": "Error message here"
 }
 ```
 
-**401 Unauthorized**
+or
+
 ```json
 {
-  "detail": "Authentication credentials were not provided."
+  "detail": "Error detail from DRF"
 }
 ```
 
-**404 Not Found**
-```json
-{
-  "error": "Resource not found"
-}
-```
+### Common Status Codes
 
-**500 Internal Server Error**
-```json
-{
-  "error": "Internal server error message"
-}
-```
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 500 | Server Error |
 
 ---
 
-## Testing the API
+## Numerology Numbers
 
-### Using cURL
-
-**Register:**
-```bash
-curl -X POST http://localhost:8000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "Test123!",
-    "password_confirm": "Test123!",
-    "name": "Test User",
-    "birth_date": "1990-05-15",
-    "gender": "male",
-    "seeking": "female"
-  }'
-```
-
-**Login:**
-```bash
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "Test123!"
-  }'
-```
-
-**Get Profile:**
-```bash
-curl http://localhost:8000/api/profile/me \
-  -H "Authorization: Token YOUR_TOKEN_HERE"
-```
-
-**Scan for Matches:**
-```bash
-curl -X POST http://localhost:8000/api/match/scan \
-  -H "Authorization: Token YOUR_TOKEN_HERE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "limit": 20,
-    "min_score": 60
-  }'
-```
-
-### Using Python Requests
-
-```python
-import requests
-
-BASE_URL = "http://localhost:8000/api"
-
-# Register
-response = requests.post(f"{BASE_URL}/auth/register", json={
-    "email": "test@example.com",
-    "password": "Test123!",
-    "password_confirm": "Test123!",
-    "name": "Test User",
-    "birth_date": "1990-05-15",
-    "gender": "male",
-    "seeking": "female"
-})
-
-data = response.json()
-token = data['token']
-
-# Get profile
-headers = {"Authorization": f"Token {token}"}
-response = requests.get(f"{BASE_URL}/profile/me", headers=headers)
-print(response.json())
-
-# Scan for matches
-response = requests.post(
-    f"{BASE_URL}/match/scan",
-    headers=headers,
-    json={"limit": 20, "min_score": 60}
-)
-print(response.json())
-```
+| Number | Theme |
+|--------|-------|
+| 1 | New Beginnings, Initiative |
+| 2 | Partnership, Cooperation |
+| 3 | Expression, Creativity |
+| 4 | Foundation, Stability |
+| 5 | Change, Freedom |
+| 6 | Harmony, Love |
+| 7 | Reflection, Wisdom |
+| 8 | Abundance, Power |
+| 9 | Completion, Compassion |
+| 11 | Master Number - Intuition |
+| 22 | Master Number - Builder |
+| 33 | Master Number - Teacher |
 
 ---
 
-## Rate Limiting
+## Energy Colors
 
-Currently no rate limiting is implemented. In production, consider:
-- 100 requests per minute for authenticated users
-- 20 requests per minute for unauthenticated users
-- Special limits for scan endpoint (10 requests per minute)
-
-## Pagination
-
-Currently not implemented. All list endpoints return full results within the specified limit.
-
-## WebSocket Support
-
-Real-time features (chat, notifications) are planned for Phase 2 and will use WebSocket connections.
+```javascript
+const energyColors = {
+  1: '#DC2626',  // Red
+  2: '#F472B6',  // Pink
+  3: '#F59E0B',  // Amber
+  4: '#10B981',  // Emerald
+  5: '#06B6D4',  // Cyan
+  6: '#FBBF24',  // Yellow
+  7: '#6366F1',  // Indigo
+  8: '#8B5CF6',  // Violet
+  9: '#F5F5F5',  // White/Silver
+}
+```

@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 10,  // 0.65rem = ~10px
+    letterSpacing: 2,  // 0.2em at 10px
     color: colors.textDim,
     textTransform: 'uppercase',
   },
@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
   },
   forecastButtonText: {
     fontFamily: fonts.monoMedium,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 12,  // 0.75rem = ~12px
+    letterSpacing: 2.4,  // 0.2em at 12px
     color: 'rgba(255, 255, 255, 0.7)',
     textTransform: 'uppercase',
   },
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   },
   continueButtonText: {
     fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 3,
+    fontSize: 12,  // 0.75rem = ~12px
+    letterSpacing: 2.4,  // 0.2em at 12px
     color: colors.textPrimary,
     textTransform: 'uppercase',
   },

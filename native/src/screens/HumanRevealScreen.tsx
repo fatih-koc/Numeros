@@ -1,4 +1,4 @@
-import React, {useState, useRef, useCallback} from 'react'
+import React, {useState, useRef, useCallback, useEffect} from 'react'
 import {
   StyleSheet,
   View,
@@ -32,6 +32,7 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 const EASING = Easing.bezier(0.4, 0, 0.2, 1)
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
+const AnimatedImage = Animated.createAnimatedComponent(Image)
 
 // Icons
 function ArrowLeftIcon({size = 20, color = 'rgba(255, 255, 255, 0.9)'}: {size?: number; color?: string}) {
@@ -81,6 +82,15 @@ function CheckCircleIcon({size = 12, color = '#10B981'}: {size?: number; color?:
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       <Path d="M22 4L12 14.01l-3-3" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+function BrainIcon({size = 12, color = '#8B5CF6'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -170,6 +180,25 @@ export function HumanRevealScreen() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [showMenu, setShowMenu] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  // Photo transition animation
+  const photoOpacity = useSharedValue(1)
+  const prevPhotoIndex = useRef(0)
+
+  // Animate photo opacity on photo change
+  useEffect(() => {
+    if (currentPhotoIndex !== prevPhotoIndex.current) {
+      // Fade out briefly then fade in
+      photoOpacity.value = withTiming(0.7, {duration: 100, easing: EASING}, () => {
+        photoOpacity.value = withTiming(1, {duration: 200, easing: EASING})
+      })
+      prevPhotoIndex.current = currentPhotoIndex
+    }
+  }, [currentPhotoIndex, photoOpacity])
+
+  const photoAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: photoOpacity.value,
+  }))
 
   // Mock data for the match (would come from params or API in real app)
   const person = {
@@ -306,7 +335,7 @@ export function HumanRevealScreen() {
     <View style={styles.container}>
       {/* Full Screen Photo */}
       <View style={styles.photoContainer} {...photoPanResponder.panHandlers}>
-        <Image source={{uri: person.photos[currentPhotoIndex]}} style={styles.photo} />
+        <AnimatedImage source={{uri: person.photos[currentPhotoIndex]}} style={[styles.photo, photoAnimatedStyle]} />
 
         {/* Photo pagination dots */}
         <View style={[styles.paginationContainer, {top: insets.top + 56}]}>
@@ -382,11 +411,21 @@ export function HumanRevealScreen() {
                   <Text style={styles.badgeVerifiedText}>Verified</Text>
                 </View>
               )}
+              <View style={styles.badgeThoughtful}>
+                <BrainIcon />
+                <Text style={styles.badgeThoughtfulText}>Thoughtful</Text>
+              </View>
             </View>
           </View>
 
           {/* Match Score Card */}
           <View style={styles.matchCard}>
+            {/* Full breakdown link - top right */}
+            <Pressable style={styles.breakdownLink} onPress={handleViewBreakdown}>
+              <Text style={styles.breakdownLinkText}>Full breakdown</Text>
+              <ChevronRightIcon />
+            </Pressable>
+
             <View style={styles.matchCardContent}>
               {/* Left - Match % */}
               <View style={styles.matchPercentContainer}>
@@ -394,10 +433,6 @@ export function HumanRevealScreen() {
                   {person.matchPercentage}%
                 </Text>
                 <Text style={styles.matchLabel}>{person.matchLabel}</Text>
-                <Pressable style={styles.breakdownLink} onPress={handleViewBreakdown}>
-                  <Text style={styles.breakdownLinkText}>Full breakdown</Text>
-                  <ChevronRightIcon />
-                </Pressable>
               </View>
 
               {/* Right - Bars */}
@@ -414,7 +449,12 @@ export function HumanRevealScreen() {
             <Text style={styles.reasonsTitle}>Why you match</Text>
             {person.reasons.map((reason, index) => (
               <View key={index} style={styles.reasonItem}>
-                <View style={styles.reasonBorder} />
+                <LinearGradient
+                  colors={['#8B5CF6', '#EC4899']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 0, y: 1}}
+                  style={styles.reasonBorder}
+                />
                 <Text style={styles.reasonText}>{reason}</Text>
               </View>
             ))}
@@ -600,6 +640,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#10B981',
   },
+  badgeThoughtful: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderRadius: 12,
+  },
+  badgeThoughtfulText: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: '#8B5CF6',
+  },
   matchCard: {
     backgroundColor: 'rgba(26, 21, 51, 0.8)',
     borderWidth: 1,
@@ -630,10 +686,13 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   breakdownLink: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 8,
+    zIndex: 1,
   },
   breakdownLinkText: {
     fontFamily: fonts.mono,
@@ -662,10 +721,9 @@ const styles = StyleSheet.create({
   },
   reasonBorder: {
     width: 2,
-    height: '100%',
     minHeight: 20,
     marginRight: 12,
-    backgroundColor: colors.accentViolet,
+    borderRadius: 1,
   },
   reasonText: {
     fontFamily: fonts.mono,

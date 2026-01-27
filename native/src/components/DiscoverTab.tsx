@@ -20,8 +20,41 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated'
 import {LinearGradient} from 'expo-linear-gradient'
+import Svg, {Path} from 'react-native-svg'
 import {colors} from '../lib/colors'
 import {fonts} from '../lib/fonts'
+
+// Filled star icon to match lucide-react Star with fill
+function FilledStar({size = 24, color = '#FBBF24'}: {size?: number; color?: string}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path
+        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+        fill={color}
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+// Heart icon with fill opacity (stroke white, fill white/20%)
+function HeartIcon({size = 24}: {size?: number}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+        fill="rgba(255, 255, 255, 0.2)"
+        stroke="white"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window')
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - 32, 358)
@@ -198,7 +231,7 @@ export function DiscoverTab({onViewProfile, onResonate}: DiscoverTabProps) {
             end={{x: 1, y: 1}}
             style={StyleSheet.absoluteFill}
           />
-          <Feather name="heart" size={24} color="white" />
+          <HeartIcon size={24} />
         </TouchableOpacity>
       </View>
 
@@ -365,7 +398,7 @@ function SwipeableCard({
         </Animated.View>
 
         <Animated.View style={[styles.starIndicator, starIndicatorStyle]}>
-          <Feather name="star" size={60} color="#FBBF24" />
+          <FilledStar size={80} color="#FBBF24" />
         </Animated.View>
 
         <Animated.View style={[styles.viewProfileIndicator, viewProfileIndicatorStyle]}>
@@ -379,7 +412,7 @@ function SwipeableCard({
           {profile.highlights.map((item, i) => (
             <View key={i} style={styles.highlightChip}>
               <Text style={styles.highlightText}>{item.text}</Text>
-              {item.checked && <Text style={styles.checkmark}>check</Text>}
+              {item.checked && <Text style={styles.checkmark}>✓</Text>}
             </View>
           ))}
         </View>
@@ -434,7 +467,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'baseline',
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 16,
   },
   title: {
@@ -595,7 +628,7 @@ const styles = StyleSheet.create({
   },
   passIndicatorText: {
     fontFamily: fonts.mono,
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#EF4444',
     letterSpacing: 3,
@@ -613,7 +646,7 @@ const styles = StyleSheet.create({
   },
   resonateIndicatorText: {
     fontFamily: fonts.mono,
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#10B981',
     letterSpacing: 3,
@@ -634,7 +667,7 @@ const styles = StyleSheet.create({
   },
   viewProfileText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: 14,
     color: 'white',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -712,7 +745,7 @@ const styles = StyleSheet.create({
   },
   toast: {
     position: 'absolute',
-    bottom: 180,
+    bottom: 128,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     paddingHorizontal: 24,
     paddingVertical: 12,

@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   dateHeader: {
-    paddingTop: 20,
+    paddingTop: 60,
     alignItems: 'center',
   },
   dateText: {
